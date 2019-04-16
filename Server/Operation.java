@@ -24,7 +24,7 @@ public enum Operation {
     SECTION_BUSY(13);
 
     static final private int OP_NUM = 14;
-    int number;
+    public int number;
     static private Operation[] array = new Operation[OP_NUM];
 
     /**

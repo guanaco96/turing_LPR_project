@@ -21,27 +21,6 @@ public class Message {
     private int size;
     private ByteBuffer buffer;
 
-
-    /**
-     * Costruttore ad argomenti variabili.
-     * @param operation header del messaggio
-     * @param chunks lista di lunghezza variabile di ByteBuffer da inserire nel corpo
-     */
-    public Message(Operation operation, ByteBuffer... chunks) {
-        op = operation;
-        size = 0;
-
-        for (ByteBuffer chunk : chunks) size += chunk.remaining() + 4;
-        buffer = ByteBuffer.allocate(size);
-
-        for(ByteBuffer chunk : chunks) {
-            buffer.putInt(chunk.remaining());
-            buffer.put(chunk);
-        }
-
-        buffer.flip();
-    }
-
     /**
      * Costruttore che prende il corpo da un Vector.
      * @param operation header del messaggio
@@ -60,6 +39,15 @@ public class Message {
          }
 
          buffer.flip();
+    }
+
+    /**
+     * Costruttore ad argomenti variabili.
+     * @param operation header del messaggio
+     * @param chunks lista di lunghezza variabile di ByteBuffer da inserire nel corpo
+     */
+    public Message(Operation operation, ByteBuffer... chunks) {
+        this(operation, new Vector<ByteBuffer>(Arrays.asList(chunks)));
     }
 
     /**

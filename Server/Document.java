@@ -48,7 +48,7 @@ public class Document {
      * @param directoryPath directory in cui salvare "creator/name/sezione_i"
      * @throws IOException sollevata da Files.createFile e Files.delete
      */
-    public void createFiles(String directoryPath) throws IOException {
+    void createFiles(String directoryPath) throws IOException {
         Path path = Paths.get(directoryPath, creator, name);
         Files.createDirectories(path);
         for (int i = 0; i < numberOfSections; i++) {
@@ -69,7 +69,7 @@ public class Document {
      * @return un ByteBuffer contenente il file.
      * @throws IOException if an error occurs during I/O operation on the file
      */
-    private static ByteBuffer fileToBytes(Path path) throws IOException {
+    static ByteBuffer fileToBytes(Path path) throws IOException {
         FileChannel channel = FileChannel.open(path,StandardOpenOption.READ);
         int size = (int) channel.size();
         ByteBuffer fileBuffer = ByteBuffer.allocate(size);
@@ -103,10 +103,10 @@ public class Document {
     }
 
     /**
-     *
-     * @param
-     * @return
-     * @throws IOException
+     * Metodo sincronizzato con cui un utente richiede di leggere un documento
+     * @param user username dell'utente che richiede il servizio
+     * @return Message che contiene una codifica delle sezioni libere e il file del documento
+     * @throws IOException sollevata da fileToBytes
      */
     synchronized Message showDocument(String user) throws IOException {
         if(user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
@@ -123,8 +123,21 @@ public class Document {
         for (int i = 0; i < numberOfSections; i++) {
             documentBuffer.add(fileToBytes(sectionPath[i]));
         }
-
         return new Message(Operation.OK, documentBuffer);
     }
+
+    /**
+     *
+     *
+     *
+     *
+     */
+    synchronized Message showSection(String user, int section) throws IOException {
+        if (user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
+        Bytebuffer busySection = ByteBuffer
+
+    }
+
+
 
 }

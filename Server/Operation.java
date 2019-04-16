@@ -19,10 +19,13 @@ public enum Operation {
 
     // risposte dal Server
     OK(10),
-    FAIL(11);
+    FAIL(11),
+    UNAUTHORIZED(12),
+    SECTION_BUSY(13);
 
+    static final private int OP_NUM = 14;
     int number;
-    static private Operation[] array = new Operation[12];
+    static private Operation[] array = new Operation[OP_NUM];
 
     /**
      * Costruttore

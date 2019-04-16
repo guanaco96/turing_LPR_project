@@ -3,6 +3,7 @@ package Server;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.*;
 
 /**
  * Questa classe definisce l'oggetto che contiene il messaggio
@@ -20,24 +21,45 @@ public class Message {
     private int size;
     private ByteBuffer buffer;
 
+
     /**
      * Costruttore ad argomenti variabili.
      * @param operation header del messaggio
-     * @param chunks list di byte[] da inserire nel corpo
+     * @param chunks lista di lunghezza variabile di ByteBuffer da inserire nel corpo
      */
     public Message(Operation operation, ByteBuffer... chunks) {
         op = operation;
         size = 0;
 
-        for (ByteBuffer chunk : chunks) size += chunk.array().length + 4;
+        for (ByteBuffer chunk : chunks) size += chunk.remaining() + 4;
         buffer = ByteBuffer.allocate(size);
 
         for(ByteBuffer chunk : chunks) {
-            buffer.putInt(chunk.array().length);
+            buffer.putInt(chunk.remaining());
             buffer.put(chunk);
         }
 
         buffer.flip();
+    }
+
+    /**
+     * Costruttore che prende il corpo da un Vector.
+     * @param operation header del messaggio
+     * @param chunks Vector di ByteBuffer da inserire nel corpo
+     */
+    public Message(Operation operation, Vector<ByteBuffer> chunks) {
+         op = operation;
+         size = 0;
+
+         for (ByteBuffer chunk : chunks) size += chunk.remaining() + 4;
+         buffer = ByteBuffer.allocate(size);
+
+         for(ByteBuffer chunk : chunks) {
+             buffer.putInt(chunk.remaining());
+             buffer.put(chunk);
+         }
+
+         buffer.flip();
     }
 
     /**

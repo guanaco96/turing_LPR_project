@@ -19,24 +19,27 @@ public enum Operation {
 
     // risposte dal Server
     OK(10),
-    FAIL(11);
+    FAIL(11),
+    UNAUTHORIZED(12),
+    SECTION_BUSY(13);
 
+    private static final int OP_NUMBER = 14;
     int number;
-    static private Operation[] array = new Operation[12];
-
-    /**
-     * Costruttore
-     * @param n intero non negativo
-     */
-    Operation(int n) {
-        number = n;
-    }
+    static private Operation[] array = new Operation[OP_NUMBER];
 
     // inizializzazione statica della mappa inversa
     static {
         for (Operation op : Operation.values()) {
             array[op.number] = op;
         }
+    }
+
+    /**
+     * Costruttore della enum
+     * @param n intero non negativo
+     */
+    Operation(int n) {
+        number = n;
     }
 
     /**

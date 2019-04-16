@@ -21,7 +21,8 @@ public class Message {
     private ByteBuffer buffer;
 
     /**
-     * Costruttore ad argomenti variabili.
+     * Costruttore pubblico ad argomenti variabili, codifica la seguenza di chunks
+     * come giustapponendo le coppie chunk.size() @ chunk nel ByteBuffer. 
      * @param operation header del messaggio
      * @param chunks list di byte[] da inserire nel corpo
      */
@@ -32,7 +33,11 @@ public class Message {
         for (byte[] chunk : chunks) size += chunk.length + 4;
         buffer = ByteBuffer.allocate(size);
 
-        for(byte[] chunk : chunks) buffer.put(chunk);
+        for(byte[] chunk : chunks) {
+            buffer.putInt(chunk.size());
+            buffer.put(chunk);
+        }
+
         buffer.flip();
     }
 
@@ -89,8 +94,7 @@ public class Message {
      */
     private void writeBytes(SocketChannel channel, ByteBuffer buffer, int size) throws IOException {
         while (size > 0) {
-            int tmp = channel.write(buffer);
-            size -= tmp;
+             size -= channel.write(buffer);
         }
     }
 

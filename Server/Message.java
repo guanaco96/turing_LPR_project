@@ -17,27 +17,8 @@ import java.nio.channels.*;
 public class Message {
 
     private Operation op ;
-
-    private int length;
-    private Vector<> chunkLength;
+    private int size;
     private ByteBuffer buffer;
-
-    public Message(Operation op, byte[]... chunks) {
-        this.op = op;
-        len = 0;
-
-        for (byte[] chunk : chunks) {
-            chunkLength.add(chunk.length);
-            len += chunkLength.lastElement();
-        }
-
-        buffer = ByteBuffer.allocate(len);
-        for(byte[] chunk : chunks) {
-            buffer.put(chunk);
-        }
-
-        private int size;
-        private ByteBuffer buffer;
 
     /**
      * Costruttore ad argomenti variabili.
@@ -54,12 +35,6 @@ public class Message {
         for(byte[] chunk : chunks) buffer.put(chunk);
         buffer.flip();
     }
-
-    public void read(SocketChannel channel) {
-        Bytebuffer hdr = ByteBuffer.allocate(4);
-        readBytes(channel, hdr, 4);
-        this.op = Operation.get(hdr.getInt());
-        while ()
 
     /**
      * Sovrascrive this con il messaggio letto dal channel

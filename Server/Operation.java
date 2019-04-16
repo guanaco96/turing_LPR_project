@@ -1,5 +1,10 @@
 package Server;
 
+/**
+ * Questa enum definisce i tipi di messaggio inviati tra Server e client.
+ *
+ * @author Lorenzo Beretta, Matricola: 536242
+ */
 public enum Operation {
 
     // richieste del Client
@@ -17,24 +22,36 @@ public enum Operation {
     FAIL(11);
 
     int number;
-    Operation(int number) {
-        this.number = number;
-    }
-    
-    // inizializzazione statica della mappa inversa
     static private Operation[] array = new Operation[12];
+
+    /**
+     * Costruttore
+     * @param n intero non negativo
+     */
+    Operation(int n) {
+        number = n;
+    }
+
+    // inizializzazione statica della mappa inversa
     static {
         for (Operation op : Operation.values()) {
             array[op.number] = op;
         }
     }
 
-    // metodo statico che fornisce la mappa inversa
-    public static Operation get(int x) {
-        return array[x];
+    /**
+    * Metodo statico che fornisce la mappa inversa
+    * @param n intero non negativo
+    * @return operazione corrispondente all'intero n
+    */
+    public static Operation getOperation(int n) {
+        return array[n];
     }
 
-    // ci interessa fare l'overriding del toString solo per le operaizoni di richiesta
+    /**
+    * Overriding del toString
+    * @return una descrizione del tipo di operazione
+    */
     public String toString() {
         switch (this) {
             case OK: return "Operazione OK";

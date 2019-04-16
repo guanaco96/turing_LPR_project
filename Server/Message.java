@@ -25,14 +25,18 @@ public class Message {
      * @param operation header del messaggio
      * @param chunks list di byte[] da inserire nel corpo
      */
-    public Message(Operation operation, byte[]... chunks) {
+    public Message(Operation operation, ByteBuffer... chunks) {
         op = operation;
         size = 0;
 
-        for (byte[] chunk : chunks) size += chunk.length + 4;
+        for (ByteBuffer chunk : chunks) size += chunk.array().length + 4;
         buffer = ByteBuffer.allocate(size);
 
-        for(byte[] chunk : chunks) buffer.put(chunk);
+        for(ByteBuffer chunk : chunks) {
+            buffer.putInt(chunk.array().length);
+            buffer.put(chunk);
+        }
+
         buffer.flip();
     }
 
@@ -89,8 +93,7 @@ public class Message {
      */
     private void writeBytes(SocketChannel channel, ByteBuffer buffer, int size) throws IOException {
         while (size > 0) {
-            int tmp = channel.write(buffer);
-            size -= tmp;
+            size -= channel.write(buffer);
         }
     }
 

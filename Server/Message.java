@@ -17,7 +17,7 @@ import java.nio.channels.*;
 public class Message {
 
     private Operation op ;
-<<<<<<< HEAD
+
     private int length;
     private Vector<> chunkLength;
     private ByteBuffer buffer;
@@ -35,9 +35,9 @@ public class Message {
         for(byte[] chunk : chunks) {
             buffer.put(chunk);
         }
-=======
-    private int size;
-    private ByteBuffer buffer;
+
+        private int size;
+        private ByteBuffer buffer;
 
     /**
      * Costruttore ad argomenti variabili.
@@ -50,19 +50,17 @@ public class Message {
 
         for (byte[] chunk : chunks) size += chunk.length + 4;
         buffer = ByteBuffer.allocate(size);
->>>>>>> 4a84dcb740a8542f700af768163ba9b02c6b4785
 
         for(byte[] chunk : chunks) buffer.put(chunk);
         buffer.flip();
     }
 
-<<<<<<< HEAD
     public void read(SocketChannel channel) {
         Bytebuffer hdr = ByteBuffer.allocate(4);
         readBytes(channel, hdr, 4);
         this.op = Operation.get(hdr.getInt());
         while ()
-=======
+
     /**
      * Sovrascrive this con il messaggio letto dal channel
      * @param channel il SocketChannel dal quale leggere il messaggio
@@ -76,7 +74,6 @@ public class Message {
         size = hdr.getInt();
         buffer = ByteBuffer.allocate(size);
         readBytes(channel, buffer, size);
->>>>>>> 4a84dcb740a8542f700af768163ba9b02c6b4785
     }
 
     /**
@@ -118,10 +115,6 @@ public class Message {
     private void writeBytes(SocketChannel channel, ByteBuffer buffer, int size) throws IOException {
         while (size > 0) {
             int tmp = channel.write(buffer);
-<<<<<<< HEAD
-            if (tmp < 0) throw new IOException();
-=======
->>>>>>> 4a84dcb740a8542f700af768163ba9b02c6b4785
             size -= tmp;
         }
     }

@@ -3,10 +3,11 @@ package Server;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.*;
 
 /**
  * Questa classe definisce l'oggetto che contiene il messaggio
- * che client e server si scambiano. Esso è costituito da un header
+ * che client e server si scambiano. Esso &egrave; costituito da un header
  * lungo 8 bytes, costituito dal tipo di operazione e la lunghezza
  * totale del messaggio, e un buffer contenente il corpo del messaggio.
  * Qusta classe implementa i metodi per scrivere e leggere messaggi su
@@ -21,24 +22,32 @@ public class Message {
     private ByteBuffer buffer;
 
     /**
-     * Costruttore pubblico ad argomenti variabili, codifica la seguenza di chunks
-     * come giustapponendo le coppie chunk.size() @ chunk nel ByteBuffer. 
+     * Costruttore che prende il corpo da un Vector.
      * @param operation header del messaggio
-     * @param chunks list di byte[] da inserire nel corpo
+     * @param chunks Vector di ByteBuffer da inserire nel corpo
      */
-    public Message(Operation operation, byte[]... chunks) {
-        op = operation;
-        size = 0;
+    public Message(Operation operation, Vector<ByteBuffer> chunks) {
+         op = operation;
+         size = 0;
 
-        for (byte[] chunk : chunks) size += chunk.length + 4;
-        buffer = ByteBuffer.allocate(size);
+         for (ByteBuffer chunk : chunks) size += chunk.remaining() + 4;
+         buffer = ByteBuffer.allocate(size);
 
-        for(byte[] chunk : chunks) {
-            buffer.putInt(chunk.size());
-            buffer.put(chunk);
-        }
+         for(ByteBuffer chunk : chunks) {
+             buffer.putInt(chunk.remaining());
+             buffer.put(chunk);
+         }
 
-        buffer.flip();
+         buffer.flip();
+    }
+
+    /**
+     * Costruttore ad argomenti variabili.
+     * @param operation header del messaggio
+     * @param chunks lista di lunghezza variabile di ByteBuffer da inserire nel corpo
+     */
+    public Message(Operation operation, ByteBuffer... chunks) {
+        this(operation, new Vector<ByteBuffer>(Arrays.asList(chunks)));
     }
 
     /**
@@ -94,7 +103,7 @@ public class Message {
      */
     private void writeBytes(SocketChannel channel, ByteBuffer buffer, int size) throws IOException {
         while (size > 0) {
-             size -= channel.write(buffer);
+            size -= channel.write(buffer);
         }
     }
 

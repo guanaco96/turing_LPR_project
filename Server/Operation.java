@@ -23,9 +23,17 @@ public enum Operation {
     UNAUTHORIZED(12),
     SECTION_BUSY(13);
 
-    private static final int OP_NUMBER = 14;
-    int number;
-    static private Operation[] array = new Operation[OP_NUMBER];
+    static final private int OP_NUM = 14;
+    public int number;
+    static private Operation[] array = new Operation[OP_NUM];
+
+    /**
+     * Costruttore
+     * @param n intero non negativo
+     */
+    Operation(int n) {
+        number = n;
+    }
 
     // inizializzazione statica della mappa inversa
     static {

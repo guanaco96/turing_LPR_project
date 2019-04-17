@@ -3,7 +3,6 @@ package Server;
 /**
  * Questa enum definisce i tipi di messaggio inviati tra Server e client.
  *
- *
  * @author Lorenzo Beretta, Matricola: 536242
  */
 public enum Operation {

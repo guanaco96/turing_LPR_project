@@ -1,5 +1,6 @@
 package Server;
 
+
 /**
  * Questa enum definisce i tipi di messaggio inviati tra Server e client.
  *

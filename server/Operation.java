@@ -21,11 +21,13 @@ public enum Operation {
     OK(10),
     FAIL(11),
     UNAUTHORIZED(12),
-    SECTION_BUSY(13);
+    SECTION_BUSY(13),
+    SECTION_SIZE_EXCEEDED(14),
+    LOGGED_YET(15),
+    WRONG_PSW(16);
 
-    static final private int OP_NUM = 14;
     public int number;
-    static private Operation[] array = new Operation[OP_NUM];
+    static private Operation[] array = new Operation[30];
 
     // inizializzazione statica della mappa inversa
     static {
@@ -59,6 +61,9 @@ public enum Operation {
         switch (this) {
             case OK: return "Operazione OK";
             case FAIL: return "Operazione Fallita";
+            case UNAUTHORIZED: return "Operazione non autorizzata";
+            case SECTION_BUSY: return "La sezione sta già subendo un editing";
+            case SECTION_SIZE_EXCEEDED: return "La sezione eccede le dimensioni massime";
 
             default: return "Operazione Ignota";
         }

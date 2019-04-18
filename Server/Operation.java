@@ -27,14 +27,6 @@ public enum Operation {
     public int number;
     static private Operation[] array = new Operation[OP_NUM];
 
-    /**
-     * Costruttore
-     * @param n intero non negativo
-     */
-    Operation(int n) {
-        number = n;
-    }
-
     // inizializzazione statica della mappa inversa
     static {
         for (Operation op : Operation.values()) {

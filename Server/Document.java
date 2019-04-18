@@ -139,7 +139,7 @@ public class Document {
         if (editingUser[section] == null) busySection.putInt(0);
         else busySection.putInt(1);
 
-        
+
 
         return new Message(Operation.OK, busySection, );
 

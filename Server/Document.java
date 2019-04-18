@@ -2,8 +2,8 @@ package Server;
 
 import java.io.*;
 import java.nio.*;
-import java.nio.file.*;
 import java.nio.channels.*;
+import java.nio.file.*;
 import java.util.*;
 
 /**
@@ -110,7 +110,7 @@ public class Document {
      */
     synchronized Message showDocument(String user) throws IOException {
         if(user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
-        // invio un messaggio al client con l'elenco dei numeri delle sezioni occupate
+        // i primi 4 * numberOfSections bytes del messaggio contendono i numeri delle sezioni occupate
         ByteBuffer busySections = ByteBuffer.allocate(numberOfSections * 4);
         for (int i = 0; i < numberOfSections; i++) {
             if (editingUser[i] == null) continue;
@@ -134,7 +134,14 @@ public class Document {
      */
     synchronized Message showSection(String user, int section) throws IOException {
         if (user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
-        Bytebuffer busySection = ByteBuffer
+        // il primo byte del messaggio contiene 0 se la sezione è libera e 1 se è occupata.
+        Bytebuffer busySection = ByteBuffer.allocate(1);
+        if (editingUser[section] == null) busySection.putInt(0);
+        else busySection.putInt(1);
+
+        
+
+        return new Message(Operation.OK, busySection, );
 
     }
 

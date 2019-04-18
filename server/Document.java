@@ -15,12 +15,14 @@ public class Document {
 
     private String name;
     private String creator;
+    private String chatAddress;
     private HashSet<String> invitedUser;
+    private ChatAddressHandler chatHandler;
 
     private int numberOfSections;
     private int sizeOfSection;
     private String[] editingUser;
-    Path[] sectionPath;
+    private Path[] sectionPath;
 
     /**
      * Costruttore della classe
@@ -29,18 +31,53 @@ public class Document {
      * @param sectionsNumber numero di sezioni
      * @param sizeOfDocument dimensione massima del documento
      */
-     Document(String documentName, String creatorUser, int sectionsNumber ,int sizeOfDocument) {
+    Document(String documentName, String creatorUser, int sectionsNumber ,int sizeOfDocument, ChatAddressHandler chat) {
         name = documentName;
         creator = creatorUser;
         numberOfSections = sectionsNumber;
         sizeOfSection = sizeOfDocument / numberOfSections;
+        chatHandler = chat;
 
         sectionPath = new Path[numberOfSections];
         editingUser = new String[numberOfSections];
-        for (String s : editingUser) s = null;
 
         invitedUser = new HashSet<String>();
         invitedUser.add(creator);
+    }
+
+    /**
+     * Getter per il nome del documento
+     *
+     * @return this.name
+     */
+    public String getDocumentName() {
+        return name;
+    }
+
+    /**
+     *
+     *
+     *
+     */
+    synchronized Message getChatAddress(String user) {
+        int sec = 0;
+        while (!editingUser[sec].equals(user)) sec++;
+        if (sec == numberOfSections) return Message(Operation.UNAUTHORIZED);
+
+        Bytebuffer portBuffer = ByteBuffer.allocate(4);
+        portBuffer.putInt(chatHandler.getPort());
+
+        if (chatAddress == null) {
+            try {
+                chatAddress = chatHandler.generateAddress();
+            }
+            catch (Exception e) {
+                return Message(Operation.FAIL);
+            }
+        }
+        ByteBuffer addressBuffer = Bytebuffer.wrap(chatAddress.getBytes());
+
+        return Message(Operation.OK, portBuffer, addressBuffer);
     }
 
     /**
@@ -119,6 +156,7 @@ public class Document {
 
         bytesToSection(section, fileBuffer);
         editingUser[section] = null;
+        freeIfUseless(chatHandler);
         return Operation.OK;
     }
 
@@ -173,24 +211,34 @@ public class Document {
      * @return  Operation.UNAUTHORIZED  se host != creator
                 Operation.OK            se host == creator
      */
-    synchronized Operation invitedUser(String host, String guest) {
+    synchronized Operation inviteUser(String host, String guest) {
         if (!host.equals(creator)) return Operation.UNAUTHORIZED;
 
         invitedUser.add(guest);
         return Operation.OK;
     }
 
-    // TODO completare il toString se serve....
-
     /**
-     * Overriding del toString che fornisce le informazioni utili al client sul documento
-     * il metodo è sincronizzato per garantire la consistenza delle infromazioni stampate
+     *
+     *
      *
      */
-     synchronized public String toString() {
-         return "\n>>>>>>>>>>>>>>missing method\n";
-     }
+    void freeIfUseless() {
+        int sec = 0;
+        while (editingUser[sec] == null) sec++;
+        if (sec != numberOfSections) return;
 
+        chatHandler.freeAddress(chatAddress);
+        chatAddress = null;
+    }
 
+    void logOut(User usr) {
+        for (int i = 0; i < numberOfSections; i++) {
+            if (editingUser[i].equals(usr.getUsername())) {
+                editingUser[i] = null;
+            }
+        }
+        freeIfUseless();
+    }
 
 }

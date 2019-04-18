@@ -70,14 +70,16 @@ public class Message {
      */
      public Vector<byte[]> segment() {
          Vector<byte[]> ret = new Vector<>();
-         if (body == null) return ret;
+         if (buffer == null) return ret;
 
-         while (body.hasRemaining()) {
-             int len = body.getInt();
+         while (buffer.hasRemaining()) {
+             int len = buffer.getInt();
              byte[] chunk = new byte[len];
-             body.get(chunk);
+             buffer.get(chunk);
              ret.add(chunk);
          }
+         
+         buffer.flip();
          return ret;
      }
 

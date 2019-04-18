@@ -1,5 +1,8 @@
 package server;
 
+// TODO nella funzione di creazione di un documento devo implementare la crezione nel
+// file system che si trova in DEPRECATED shelf
+
 import java.util.*;
 import java.util.concurrent.*;
 import java.nio.channels.*;

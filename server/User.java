@@ -18,6 +18,7 @@ public class User {
     private String password;
     private HashSet<Document> myDocuments;
     private boolean isLogged;
+    private boolean wasInvited;
     private Document currentlyEditing;
     private InetSocketAddress clientAddress;
 
@@ -30,79 +31,115 @@ public class User {
         password = psw;
         myDocuments = new HashSet<>();
         isLogged = false;
-        currentlyEditing = null;
-        clientAddress = null;
+        wasInvited = false;
     }
 
     /**
      *
      *
      */
-     synchronized Operation logIn(String psw, InetSocketAddress address) {
-         if (isLogged) return Operation.LOGGED_YET;
-         if (!password.equals(psw)) return Operation.WRONG_PSW;
+    String getUsername() {
+        return username;
+    }
 
-         isLogged = true;
-         clientAddress = address;
-         return Operation.OK;
-     }
+    /**
+     *
+     *
+     */
+    synchronized void addDocument(Document document) {
+        myDocuments.add(document);
+    }
 
-     /**
-      *
-      *
-      */
-      synchronized Document logOut() {
-          isLogged = false;
-          Document ret = currentlyEditing;
-          currentlyEditing = null;
-          clientAddress = null;
-          return ret;
-      }
+    /**
+     *
+     *
+     */
+    synchronized Vector<String> listDocuments() {
+        Vector<String> ret = new Vector<>();
+        for (Document doc : myDocuments) {
+            ret.add(doc.getDocumentName());
+        }
+        return ret;
+    }
 
-     /**
-      *
-      *
-      */
-      synchronized Operation startEdit(Document document) {
-          if (currentlyEditing != null) return Operation.UNAUTHORIZED;
-          currentlyEditing = document;
-          return Operation.OK;
-      }
+    /**
+     *
+     *
+     */
+    synchronized Operation logIn(String psw, InetSocketAddress address) {
+        if (!password.equals(psw)) return Operation.WRONG_PSW;
 
-      /**
-       *
-       *
-       */
-       synchronized Operation endEdit() {
-           if (currentlyEditing == null) return Operation.UNAUTHORIZED;
-           currentlyEditing = null;
-           return Operation.OK;
-       }
+        isLogged = true;
+        clientAddress = address;
+        return Operation.OK;
+    }
 
-       /**
-         *
-         *
-         */
-         synchronized void sendNotification(String host, String document, DatagramChannel channel) {
-             if (!isLogged) return;
-             String msg = "[" + host + "] ti ha invitato a modificare " + document;
-             ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
-                try {
-                    channel.send(buffer, clientAddress);
-                }
-                catch(IOException e) {
-                    // non è grave se si perde una notifica, stesso motivo per cui usiamo UDP
-                }
-         }
+    /**
+     *
+     *
+     */
+    synchronized Document logOut() {
+        isLogged = false;
+        Document ret = currentlyEditing;
+        currentlyEditing = null;
+        clientAddress = null;
+        return ret;
+    }
 
-         /**
-          *
-          *
-          */
+    /**
+     *
+     *
+     */
+    synchronized Operation startEdit(Document document) {
+        if (currentlyEditing != null) return Operation.UNAUTHORIZED;
+        currentlyEditing = document;
+        return Operation.OK;
+    }
 
-          /**
-           *
-           *
-           */
+    /**
+     *
+     *
+     */
+    synchronized Operation endEdit() {
+        if (currentlyEditing == null) return Operation.UNAUTHORIZED;
+        currentlyEditing = null;
+        return Operation.OK;
+    }
 
+    /**
+     *
+     *
+     */
+    synchronized void sendNotification(User host, Document doc, DatagramChannel channel) {
+        if (!isLogged) {
+            wasInvited = true;
+            return;
+        }
+        String msg = "[" + host.username + "] ti ha invitato a modificare " + doc.getDocumentName();
+        ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
+        try {
+            channel.send(buffer, clientAddress);
+        }
+        catch (IOException e) {
+            wasInvited = true;
+        }
+    }
+
+    /**
+     *
+     *
+     */
+    synchronized void sendIfWasInvited(DatagramChannel channel) {
+        if (!wasInvited) return;
+
+        wasInvited = false;
+        String msg =  "Mentre eri disconnesso sei stato invitato a modificare dei documenti";
+        ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
+        try {
+            channel.send(buffer, clientAddress);
+        }
+        catch (IOException e) {
+            wasInvited = true;
+        }
+    }
 }

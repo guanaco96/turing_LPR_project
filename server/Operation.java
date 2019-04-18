@@ -16,6 +16,8 @@ public enum Operation {
     SHOW_SECTION(5),
     SHOW_DOCUMENT(6),
     CHAT(7),
+    LIST(8),
+
 
     // risposte dal Server
     OK(10),
@@ -23,8 +25,7 @@ public enum Operation {
     UNAUTHORIZED(12),
     SECTION_BUSY(13),
     SECTION_SIZE_EXCEEDED(14),
-    LOGGED_YET(15),
-    WRONG_PSW(16);
+    WRONG_PSW(15);
 
     public int number;
     static private Operation[] array = new Operation[30];

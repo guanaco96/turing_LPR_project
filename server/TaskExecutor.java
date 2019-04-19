@@ -27,6 +27,8 @@ Document createDocument (String name, String creator, int numberOfSections) thro
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.io.*;
+import java.nio.*;
 import java.nio.channels.*;
 import java.net.*;
 
@@ -50,16 +52,20 @@ public class TaskExecutor implements Runnable {
      *
      */
     public void run() {
-        Message request = Message.read(socketChannel);
-        Message reply = satisfy(request);
-
+        try {
+            Message request = Message.read(socketChannel);
+            Message reply = satisfy(request);
+        }
+        catch (IOException e) {
+            Message reply = new Message(Operation.FAIL);
+        }
 
     }
     /**
      *
      *
      */
-    Message satisfy(Message request) {
+    Message satisfy(Message request) throws IOException {
         Message reply;
         Vector<byte[]> chunks = request.segment();
         User user = socketMap.get(socketChannel);
@@ -67,27 +73,25 @@ public class TaskExecutor implements Runnable {
 
         switch (request.getOp()) {
 
-            case Operation.LOGIN:
+            case LOGIN:
                 if (chunks.size() != 3) return new Message(Operation.WRONG_REQUEST);
                 if (user != null) return new Message(Operation.ALREADY_LOGGED);
 
-                user = userMap.get(String(chunks.get(0)));
-                String psw = String(chunks.get(1));
+                user = userMap.get(new String(chunks.get(0)));
+                String psw = new String(chunks.get(1));
                 int port = ByteBuffer.wrap(chunks.get(2)).getInt();
 
-                InetSocketAddress rsa = socketChannel.getRemoteAddress();
-                InetAddress ra = rsa.getAddress();
-                InetSocketAddress udpsa = InetSocketAddress(ra, port);
+                InetSocketAddress rsa = (InetSocketAddress) socketChannel.getRemoteAddress();
+                InetSocketAddress udpsa = new InetSocketAddress(rsa.getAddress(), port);
 
                 Operation responseOp = user.logIn(psw, udpsa);
-                if (responseOp == Operation.OK) socketMap.add(socketChannel, user);
+                if (responseOp == Operation.OK) socketMap.putIfAbsent(socketChannel, user);
                 return new Message(responseOp);
-                break;
 
-            case Operation.create:
+            case CREATE:
                 if (chunks.size() != 2) return new Message(Operation.WRONG_REQUEST);
 
-                String documentName = String(chunks.get(0));
+                String documentName = new String(chunks.get(0));
                 int numberOfSections = ByteBuffer.wrap(chunks.get(1)).getInt();
                 //Document doc = new Document(s
 
@@ -96,7 +100,6 @@ public class TaskExecutor implements Runnable {
             default: return new Message();
 
         }
-
     }
 
     /**

@@ -32,7 +32,7 @@ public class ChatHandler {
      *
      *
      */
-     public synchronized String generateAddress() throws Exception{
+     public synchronized String generateAddress() throws Exception {
         if (addressSet.size() == bound) throw new Exception();
         while (true) {
             int n = base + random.nextInt(bound);

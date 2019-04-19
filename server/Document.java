@@ -16,9 +16,10 @@ public class Document {
 
     private String name;
     private User creator;
-    private String chatAddress;
     private HashSet<User> invitedUser;
+
     private ChatHandler chatHandler;
+    private String chatAddress;
 
     private int numberOfSections;
     private int sizeOfSection;
@@ -229,10 +230,10 @@ public class Document {
     void freeIfUseless() {
         int sec = 0;
         while (editingUser[sec] == null) sec++;
-        if (sec != numberOfSections) return;
-
-        chatHandler.freeAddress(chatAddress);
-        chatAddress = null;
+        if (sec == numberOfSections) {
+            chatHandler.freeAddress(chatAddress);
+            chatAddress = null;
+        }
     }
 
     void logOut(User user) {

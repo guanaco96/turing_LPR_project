@@ -30,7 +30,7 @@ public enum Operation {
     ALREADY_LOGGED(17),
     NOT_LOGGED(18);
 
-    public int number;
+    int number;
     static private Operation[] array = new Operation[30];
 
     // inizializzazione statica della mappa inversa

@@ -24,18 +24,20 @@ public class Document {
     private String[] editingUser;
     private Path[] sectionPath;
 
+    // massima size dei documenti scambiati == 1GB
+    private final int DOCUMENT_MAX_SIZE = 1 << 30;
+
     /**
      * Costruttore della classe
      * @param documentName nome del documento
      * @param creatorUser username del creatore
      * @param sectionsNumber numero di sezioni
-     * @param sizeOfDocument dimensione massima del documento
      */
-    Document(String documentName, String creatorUser, int sectionsNumber ,int sizeOfDocument, ChatAddressHandler chat) {
+    Document(String documentName, String creatorUser, int sectionsNumber, ChatAddressHandler chat) {
         name = documentName;
         creator = creatorUser;
         numberOfSections = sectionsNumber;
-        sizeOfSection = sizeOfDocument / numberOfSections;
+        sizeOfSection = DOCUMENT_MAX_SIZE / numberOfSections;
         chatHandler = chat;
 
         sectionPath = new Path[numberOfSections];

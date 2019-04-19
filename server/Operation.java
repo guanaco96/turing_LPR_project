@@ -25,7 +25,10 @@ public enum Operation {
     UNAUTHORIZED(12),
     SECTION_BUSY(13),
     SECTION_SIZE_EXCEEDED(14),
-    WRONG_PSW(15);
+    WRONG_PSW(15),
+    WRONG_REQUEST(16),
+    ALREADY_LOGGED(17),
+    NOT_LOGGED(18);
 
     public int number;
     static private Operation[] array = new Operation[30];
@@ -60,13 +63,17 @@ public enum Operation {
     */
     public String toString() {
         switch (this) {
-            case OK: return "Operazione OK";
-            case FAIL: return "Operazione Fallita";
-            case UNAUTHORIZED: return "Operazione non autorizzata";
-            case SECTION_BUSY: return "La sezione sta già subendo un editing";
+            case OK:                    return "Operazione OK";
+            case FAIL:                  return "Operazione Fallita";
+            case UNAUTHORIZED:          return "Operazione non autorizzata";
+            case SECTION_BUSY:          return "La sezione sta già subendo un editing";
             case SECTION_SIZE_EXCEEDED: return "La sezione eccede le dimensioni massime";
+            case WRONG_PSW:             return "Password errata";
+            case NOT_LOGGED:            return "Non sei ancora loggato! Effettua il logIn e ritenta";
+            case ALREADY_LOGGED:        return "Questo User è già loggato";
+            case WRONG_REQUEST:         return "Richiesta mal formattata"
 
-            default: return "Operazione Ignota";
+            default:                    return "Operazione Ignota";
         }
     }
 }

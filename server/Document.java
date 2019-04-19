@@ -8,20 +8,21 @@ import java.util.*;
 
 /**
  * -----------------DESCRIZIONE---------------
+ * ACHTUNG! tutte le comparazioni tra users sono fatte by reference
  *
  * @author Lorenzo Beretta, Matricola: 536242
  */
 public class Document {
 
     private String name;
-    private String creator;
+    private User creator;
     private String chatAddress;
-    private HashSet<String> invitedUser;
-    private ChatAddressHandler chatHandler;
+    private HashSet<User> invitedUser;
+    private ChatHandler chatHandler;
 
     private int numberOfSections;
     private int sizeOfSection;
-    private String[] editingUser;
+    private User[] editingUser;
     private Path[] sectionPath;
 
     // massima size dei documenti scambiati == 1GB
@@ -30,10 +31,10 @@ public class Document {
     /**
      * Costruttore della classe
      * @param documentName nome del documento
-     * @param creatorUser username del creatore
+     * @param creatorUser User corrispondente al creatore
      * @param sectionsNumber numero di sezioni
      */
-    Document(String documentName, String creatorUser, int sectionsNumber, ChatAddressHandler chat) {
+    Document(String documentName, User creatorUser, int sectionsNumber, ChatHandler chat) {
         name = documentName;
         creator = creatorUser;
         numberOfSections = sectionsNumber;
@@ -41,9 +42,9 @@ public class Document {
         chatHandler = chat;
 
         sectionPath = new Path[numberOfSections];
-        editingUser = new String[numberOfSections];
+        editingUser = new User[numberOfSections];
 
-        invitedUser = new HashSet<String>();
+        invitedUser = new HashSet<User>();
         invitedUser.add(creator);
     }
 
@@ -61,12 +62,12 @@ public class Document {
      *
      *
      */
-    synchronized Message getChatAddress(String user) {
+    synchronized Message getChatAddress(User user) {
         int sec = 0;
-        while (!editingUser[sec].equals(user)) sec++;
-        if (sec == numberOfSections) return Message(Operation.UNAUTHORIZED);
+        while (editingUser[sec] != user) sec++;
+        if (sec == numberOfSections) return new Message(Operation.UNAUTHORIZED);
 
-        Bytebuffer portBuffer = ByteBuffer.allocate(4);
+        ByteBuffer portBuffer = ByteBuffer.allocate(4);
         portBuffer.putInt(chatHandler.getPort());
 
         if (chatAddress == null) {
@@ -74,12 +75,12 @@ public class Document {
                 chatAddress = chatHandler.generateAddress();
             }
             catch (Exception e) {
-                return Message(Operation.FAIL);
+                return new Message(Operation.FAIL);
             }
         }
-        ByteBuffer addressBuffer = Bytebuffer.wrap(chatAddress.getBytes());
+        ByteBuffer addressBuffer = ByteBuffer.wrap(chatAddress.getBytes());
 
-        return Message(Operation.OK, portBuffer, addressBuffer);
+        return new Message(Operation.OK, portBuffer, addressBuffer);
     }
 
     /**
@@ -122,7 +123,7 @@ public class Document {
      * @throws IOException se viene sollevata da sectionToBytes
      * @return Message da restituire al client
      */
-    synchronized Message startEdit(String user, int section) throws IOException {
+    synchronized Message startEdit(User user, int section) throws IOException {
         section--; // in questo modo possiamo contare le sezioni a partire da 1
 
         if (!invitedUser.contains(user)) {
@@ -138,7 +139,7 @@ public class Document {
     /**
      * Metodo per terminare l'editing di una sezine di this
      *
-     * @param user username dell'utente che vorrebbe terminare l'editing
+     * @param user User relativo all'utente che vorrebbe terminare l'editing
      * @param section numero della sezione di cui terminare l'editing
      * @param fileBuffer ByteBuffer in cui è salvata la sezione da sovrascrivere
      * @return  Operation.UNAUTHORIZED  se l'utente non ha i permessi per modificare il documento
@@ -146,10 +147,10 @@ public class Document {
                 operation.SECTION_SIZE_EXCEEDED se la sezione supera i limiti di spazio
      * @throws IOException se lanciata da bytesToSection
      */
-    synchronized Operation endEdit(String user, int section, ByteBuffer fileBuffer) throws IOException {
+    synchronized Operation endEdit(User user, int section, ByteBuffer fileBuffer) throws IOException {
         section--; // in questo modo possiamo contare le sezioni a partire da 1
 
-        if (!invitedUser.contains(user) || editingUser[section] == null || !editingUser[section].equals(user)) {
+        if (!invitedUser.contains(user) || editingUser[section] == null || editingUser[section] != user) {
             return Operation.UNAUTHORIZED;
         }
         if (fileBuffer.remaining() > sizeOfSection) {
@@ -158,7 +159,7 @@ public class Document {
 
         bytesToSection(section, fileBuffer);
         editingUser[section] = null;
-        freeIfUseless(chatHandler);
+        freeIfUseless();
         return Operation.OK;
     }
 
@@ -169,7 +170,7 @@ public class Document {
      * @return Message che contiene una codifica delle sezioni libere e il file del documento
      * @throws IOException sollevata da sectionToBytes
      */
-    synchronized Message showDocument(String user) throws IOException {
+    synchronized Message showDocument(User user) throws IOException {
         if(user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
         // per 0 <= i <= numberOfSections il byte i-esimo del corpo del messaggio vale 1 sse la sezione è occupata
         ByteBuffer busySections = ByteBuffer.allocate(numberOfSections);
@@ -195,7 +196,7 @@ public class Document {
      * @return Message che contiene una codifica dello stato di editing della sezione e la sezione stessa
      * @throws IOException sollevata da sectionToBytes
      */
-    synchronized Message showSection(String user, int section) throws IOException {
+    synchronized Message showSection(User user, int section) throws IOException {
         if (user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
         // il primo byte del messaggio contiene 0 se la sezione è libera e 1 se è occupata.
         ByteBuffer busySection = ByteBuffer.allocate(1);
@@ -213,8 +214,8 @@ public class Document {
      * @return  Operation.UNAUTHORIZED  se host != creator
                 Operation.OK            se host == creator
      */
-    synchronized Operation inviteUser(String host, String guest) {
-        if (!host.equals(creator)) return Operation.UNAUTHORIZED;
+    synchronized Operation inviteUser(User host, User guest) {
+        if (host != creator) return Operation.UNAUTHORIZED;
 
         invitedUser.add(guest);
         return Operation.OK;
@@ -234,11 +235,9 @@ public class Document {
         chatAddress = null;
     }
 
-    void logOut(User usr) {
+    void logOut(User user) {
         for (int i = 0; i < numberOfSections; i++) {
-            if (editingUser[i].equals(usr.getUsername())) {
-                editingUser[i] = null;
-            }
+            if (editingUser[i] == user) editingUser[i] = null;
         }
         freeIfUseless();
     }

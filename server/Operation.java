@@ -71,7 +71,7 @@ public enum Operation {
             case WRONG_PSW:             return "Password errata";
             case NOT_LOGGED:            return "Non sei ancora loggato! Effettua il logIn e ritenta";
             case ALREADY_LOGGED:        return "Questo User è già loggato";
-            case WRONG_REQUEST:         return "Richiesta mal formattata"
+            case WRONG_REQUEST:         return "Richiesta mal formattata";
 
             default:                    return "Operazione Ignota";
         }

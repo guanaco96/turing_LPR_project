@@ -8,7 +8,7 @@ import java.io.*;
  *
  * @author Lorenzo Beretta, Matricola: 536242
  */
-public class ChatAddressHandler {
+public class ChatHandler {
 
     private HashSet<String> addressSet;
     private int port;
@@ -20,7 +20,7 @@ public class ChatAddressHandler {
      *
      *
      */
-    public ChatAddressHandler(int bs, int bnd, int prt) {
+    public ChatHandler(int bs, int bnd, int prt) {
         addressSet = new HashSet<>();
         base = bs;
         bound = bnd;

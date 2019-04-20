@@ -54,10 +54,12 @@ public class User {
      *
      *
      */
-    synchronized Vector<String> listDocuments() {
-        Vector<String> ret = new Vector<>();
+    synchronized Vector<ByteBuffer> listDocuments() {
+        Vector<ByteBuffer> ret = new Vector<>();
         for (Document doc : myDocuments) {
-            ret.add(doc.getDocumentName());
+            String docName = doc.getDocumentName();
+            ByteBuffer buffer = ByteBuffer.wrap(docName.getBytes());
+            ret.add(buffer);
         }
         return ret;
     }

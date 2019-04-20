@@ -11,7 +11,7 @@ public enum Operation {
     LOGIN(0),
     INVITE(1),
     CREATE(2),
-    EDIT(3),
+    START_EDIT(3),
     END_EDIT(4),
     SHOW_SECTION(5),
     SHOW_DOCUMENT(6),
@@ -28,7 +28,11 @@ public enum Operation {
     WRONG_PSW(15),
     WRONG_REQUEST(16),
     ALREADY_LOGGED(17),
-    NOT_LOGGED(18);
+    NOT_LOGGED(18),
+    USER_UNKNOWN(19),
+    DOCUMENT_UNKNOWN(20),
+    DUPLICATE_DOCUMENT(21),
+    SECTION_UNKNOWN(22);
 
     int number;
     static private Operation[] array = new Operation[30];
@@ -69,9 +73,12 @@ public enum Operation {
             case SECTION_BUSY:          return "La sezione sta già subendo un editing";
             case SECTION_SIZE_EXCEEDED: return "La sezione eccede le dimensioni massime";
             case WRONG_PSW:             return "Password errata";
-            case NOT_LOGGED:            return "Non sei ancora loggato! Effettua il logIn e ritenta";
-            case ALREADY_LOGGED:        return "Questo User è già loggato";
             case WRONG_REQUEST:         return "Richiesta mal formattata";
+            case ALREADY_LOGGED:        return "Questo User è già loggato";
+            case NOT_LOGGED:            return "Non sei ancora loggato! Effettua il logIn e ritenta";
+            case USER_UNKNOWN:          return "L'utente non è esiste";
+            case DOCUMENT_UNKNOWN:      return "Il documento non esiste";
+            case DUPLICATE_DOCUMENT:    return "Documento già presente";
 
             default:                    return "Operazione Ignota";
         }

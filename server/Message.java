@@ -78,7 +78,7 @@ public class Message {
              buffer.get(chunk);
              ret.add(chunk);
          }
-         
+
          buffer.flip();
          return ret;
      }
@@ -91,7 +91,6 @@ public class Message {
     public static Message read(SocketChannel channel) throws IOException {
         ByteBuffer hdr = ByteBuffer.allocate(8);
         readBytes(channel, hdr, 8);
-        hdr.flip();
 
         Message message = new Message();
         message.op = Operation.getOperation(hdr.getInt());
@@ -130,6 +129,7 @@ public class Message {
             if (tmp < 0) throw new IOException();
             size -= tmp;
         }
+        buffer.flip();
     }
 
     /**
@@ -143,6 +143,7 @@ public class Message {
         while (size > 0) {
             size -= channel.write(buffer);
         }
+        buffer.flip();
     }
 
 }

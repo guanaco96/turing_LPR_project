@@ -26,9 +26,6 @@ public class Document {
     private User[] editingUser;
     private Path[] sectionPath;
 
-    // massima size dei documenti scambiati == 1GB
-    private final int DOCUMENT_MAX_SIZE = 1 << 30;
-
     /**
      * Costruttore della classe
      * @param documentName nome del documento
@@ -39,7 +36,7 @@ public class Document {
         name = documentName;
         creator = creatorUser;
         numberOfSections = sectionsNumber;
-        sizeOfSection = DOCUMENT_MAX_SIZE / numberOfSections;
+        sizeOfSection = Config.maxDocumentSize / numberOfSections;
         chatHandler = chat;
 
         sectionPath = new Path[numberOfSections];
@@ -83,6 +80,32 @@ public class Document {
 
         return new Message(Operation.OK, portBuffer, addressBuffer);
     }
+
+    /**
+     *
+     *
+     *
+     */
+    Operation createFile() {
+        Path path = Paths.get(Config.basePath, creator.getUsername(), name);
+        try { Files.createDirectories(path);}
+        catch (IOException e) { return Operation.FAIL;}
+
+        for (int i = 0; i < numberOfSections; i++) {
+            try {
+                sectionPath[i] = path.resolve("section_" + i);
+                Files.createFile(sectionPath[i]);
+            }
+            catch (FileAlreadyExistsException e) {
+                try { Files.delete(sectionPath[i]);}
+                catch (IOException exc) { return Operation.FAIL;}
+                i--;
+            }
+            catch (IOException e) { return Operation.FAIL;}
+        }
+        return Operation.OK;
+    }
+
 
     /**
      * Metodo che utilizza java.nio.FileChannel per leggere una sezione
@@ -130,7 +153,7 @@ public class Document {
         if (!invitedUser.contains(user)) {
             return new Message(Operation.UNAUTHORIZED);
         }
-
+        if (section >= numberOfSections) return new Message(Operation.SECTION_UNKNOWN);
         if (editingUser[section] != null) return new Message(Operation.SECTION_BUSY);
 
         editingUser[section] = user;

@@ -37,8 +37,8 @@ class Server implements Runnable {
         catch (Exception e) {
             e.printStackTrace();
         }
-        }
     }
+}
     class Client implements Runnable {
         int port;
 

@@ -135,8 +135,8 @@ public class User {
         if (!wasInvited) return;
 
         wasInvited = false;
-        String msg =  "Mentre eri disconnesso sei stato invitato a modificare dei documenti";
-        ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
+        String text =  "Mentre eri disconnesso sei stato invitato a modificare dei documenti";
+        ByteBuffer buffer = ByteBuffer.wrap(text.getBytes());
         try {
             channel.send(buffer, clientAddress);
         }

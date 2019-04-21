@@ -15,8 +15,9 @@ public enum Operation {
     END_EDIT(4),
     SHOW_SECTION(5),
     SHOW_DOCUMENT(6),
-    CHAT(7),
+    CHAT(7), // ?? SERVE DAVVERO QUESTO TIPO DI OPERAIZONE ??? potremmo fornire l'indirizzo in caso di start edit..
     LIST(8),
+    LOGOUT(9),
 
 
     // risposte dal Server
@@ -32,7 +33,8 @@ public enum Operation {
     USER_UNKNOWN(19),
     DOCUMENT_UNKNOWN(20),
     DUPLICATE_DOCUMENT(21),
-    SECTION_UNKNOWN(22);
+    SECTION_UNKNOWN(22),
+    NOTIFICATION(23);
 
     int number;
     static private Operation[] array = new Operation[30];
@@ -79,6 +81,7 @@ public enum Operation {
             case USER_UNKNOWN:          return "L'utente non è esiste";
             case DOCUMENT_UNKNOWN:      return "Il documento non esiste";
             case DUPLICATE_DOCUMENT:    return "Documento già presente";
+            case NOTIFICATION:          return "Notifica";
 
             default:                    return "Operazione Ignota";
         }

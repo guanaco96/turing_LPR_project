@@ -8,6 +8,7 @@ import java.nio.channels.*;
 import java.net.*;
 
 public class TaskExecutor implements Runnable {
+
     private ConcurrentHashMap<String,User> userMap;
     private ConcurrentHashMap<String,Document> documentMap;
     private ConcurrentHashMap<SocketChannel,User> socketMap;
@@ -26,15 +27,10 @@ public class TaskExecutor implements Runnable {
      *
      *
      */
-    public void run() {
-        try {
-            Message request = Message.read(socketChannel);
-            Message reply = satisfy(request);
-        }
-        catch (IOException e) {
-            Message reply = new Message(Operation.FAIL);
-        }
-
+    private void logOut() {
+        User user = socketMap.remove(socketChannel);
+        Document document = user.logOut();
+        if(document != null) document.logOut(user);
     }
 
     /**
@@ -48,7 +44,7 @@ public class TaskExecutor implements Runnable {
 
         switch (request.getOp()) {
 
-            case LOGIN:
+            case LOGIN: {
                 if (chunks.size() != 3) return new Message(Operation.WRONG_REQUEST);
                 if (user != null) return new Message(Operation.ALREADY_LOGGED);
                 user = userMap.get(new String(chunks.get(0)));
@@ -60,8 +56,8 @@ public class TaskExecutor implements Runnable {
                 Operation reply = user.logIn(psw, udpsa);
                 if (reply == Operation.OK) socketMap.put(socketChannel, user);
                 return new Message(reply);
-
-            case CREATE:
+            }
+            case CREATE: {
                 if (chunks.size() != 2) return new Message(Operation.WRONG_REQUEST);
                 String documentName = new String(chunks.get(0));
                 int numberOfSections = ByteBuffer.wrap(chunks.get(1)).getInt();
@@ -71,10 +67,10 @@ public class TaskExecutor implements Runnable {
                     return new Message(Operation.DUPLICATE_DOCUMENT);
                 }
                 Operation reply = document.createFile();
-                if (reply == Operation.OK) creator.addDocument(document);
+                if (reply == Operation.OK) user.addDocument(document);
                 return new Message(reply);
-
-            case INVITE:
+            }
+            case INVITE: {
                 if (chunks.size() != 2) return new Message(Operation.WRONG_REQUEST);
                 String documentName = new String(chunks.get(0));
                 String guestName = new String(chunks.get(1));
@@ -89,13 +85,13 @@ public class TaskExecutor implements Runnable {
                     guest.sendNotification(user, document, datagramChannel);
                 }
                 return new Message(reply);
-
-            case LIST:
+            }
+            case LIST: {
                 if (!chunks.isEmpty()) return new Message(Operation.WRONG_REQUEST);
                 Vector<ByteBuffer> docList = user.listDocuments();
-                return Message(Operation.OK, docList);
-
-            case SHOW_SECTION:
+                return new Message(Operation.OK, docList);
+            }
+            case SHOW_SECTION: {
                 if (chunks.size() != 2) return new Message(Operation.WRONG_REQUEST);
                 String documentName = new String(chunks.get(0));
                 int section = ByteBuffer.wrap(chunks.get(1)).getInt();
@@ -103,8 +99,8 @@ public class TaskExecutor implements Runnable {
 
                 if (document == null) return new Message(Operation.DOCUMENT_UNKNOWN);
                 return document.showSection(user, section);
-
-            case SHOW_DOCUMENT:
+            }
+            case SHOW_DOCUMENT: {
                 if (chunks.size() != 1) return new Message(Operation.WRONG_REQUEST);
                 String documentName = new String(chunks.get(0));
 
@@ -112,8 +108,8 @@ public class TaskExecutor implements Runnable {
 
                 if (document == null) return new Message(Operation.DOCUMENT_UNKNOWN);
                 return document.showDocument(user);
-
-            case START_EDIT:
+            }
+            case START_EDIT: {
                 if (chunks.size() != 2) return new Message(Operation.WRONG_REQUEST);
                 String documentName = new String(chunks.get(0));
                 int section = ByteBuffer.wrap(chunks.get(1)).getInt();
@@ -121,22 +117,33 @@ public class TaskExecutor implements Runnable {
 
                 Operation reply = user.startEdit(document);
                 if (reply != Operation.OK) return new Message(reply);
+                Message msg = null;
                 try {
-                    reply = document.startEdit(user, section);
+                    msg = document.startEdit(user, section);
                 }
                 catch (IOException e) {
                     user.endEdit();
                 }
-                if (reply != Operation.OK) user.endEdit();
+                if (msg != null && msg.getOp() != Operation.OK) user.endEdit();
                 return new Message(reply);
+            }
+            case END_EDIT: {
+                if (chunks.size() != 3) return new Message(Operation.WRONG_REQUEST);
+                String documentName = new String(chunks.get(0));
+                int section = ByteBuffer.wrap(chunks.get(1)).getInt();
+                ByteBuffer fileBuffer = ByteBuffer.wrap(chunks.get(2));
+                Document document = documentMap.get(documentName);
 
-            case END_EDIT:
-                
-
-
-            // FAKE
-            default: return new Message();
-
+                Operation reply = user.endEdit();
+                if (reply != Operation.OK) return new Message(reply);
+                reply = document.endEdit(user, section, fileBuffer);
+                return new Message(reply);
+            }
+            case LOGOUT: {
+                logOut();
+                return new Message(Operation.OK);
+            }
+            default: return new Message(Operation.WRONG_REQUEST);
         }
     }
 
@@ -144,10 +151,27 @@ public class TaskExecutor implements Runnable {
      *
      *
      */
+    public void run() {
+        Message request = null;
+        Message reply = null;
+        try {
+            request = Message.read(socketChannel);
+            reply = satisfy(request);
+            reply.write(socketChannel);
+            if (request.getOp() == Operation.LOGOUT) socketChannel.close();
+            else queue.put(socketChannel);
+        }
+        catch (IOException | InterruptedException e) {
+            logOut();
+            try {
+                socketChannel.close();
+            } catch (IOException exc) {}
+        }
 
-    /**
-     *
-     *
-     */
-
+        if (request != null && request.getOp() == Operation.LOGIN) {
+            User user = userMap.get(socketChannel);
+            user.sendIfWasInvited(datagramChannel);
+        }
+        selector.wakeup();
+    }
 }

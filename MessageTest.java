@@ -7,10 +7,10 @@ import java.util.*;
 import server.Operation;;
 import server.Message;
 
-class Server implements Runnable {
+class ServerTest implements Runnable {
     int port;
 
-    Server(int prt) {
+    ServerTest(int prt) {
         port = prt;
     }
 
@@ -39,10 +39,10 @@ class Server implements Runnable {
         }
     }
 }
-    class Client implements Runnable {
+    class ClientTest implements Runnable {
         int port;
 
-        Client(int prt) {
+        ClientTest(int prt) {
             port = prt;
         }
 
@@ -76,14 +76,14 @@ class Server implements Runnable {
             Random rnd = new Random();
             int port = 1111;
 
-            Thread st = new Thread(new Server(port));
+            Thread st = new Thread(new ServerTest(port));
             st.start();
 
             try {
                 Thread.sleep(100);
             } catch (Exception e) {}
 
-                Thread ct = new Thread(new Client(port));
+                Thread ct = new Thread(new ClientTest(port));
                 ct.start();
 
                 try {

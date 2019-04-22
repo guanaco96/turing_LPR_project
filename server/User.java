@@ -38,7 +38,7 @@ public class User {
      *
      *
      */
-    String getUsername() {
+    public String getUsername() {
         return username;
     }
 

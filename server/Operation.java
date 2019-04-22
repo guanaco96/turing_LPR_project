@@ -34,7 +34,8 @@ public enum Operation {
     DOCUMENT_UNKNOWN(20),
     DUPLICATE_DOCUMENT(21),
     SECTION_UNKNOWN(22),
-    NOTIFICATION(23);
+    NOTIFICATION(23),
+    USERNAME_EXISTS(24);
 
     int number;
     static private Operation[] array = new Operation[30];
@@ -68,22 +69,24 @@ public enum Operation {
     * @return una descrizione del tipo di operazione
     */
     public String toString() {
+        String s = "[Server]: ";
         switch (this) {
-            case OK:                    return "Operazione OK";
-            case FAIL:                  return "Operazione Fallita";
-            case UNAUTHORIZED:          return "Operazione non autorizzata";
-            case SECTION_BUSY:          return "La sezione sta già subendo un editing";
-            case SECTION_SIZE_EXCEEDED: return "La sezione eccede le dimensioni massime";
-            case WRONG_PSW:             return "Password errata";
-            case WRONG_REQUEST:         return "Richiesta mal formattata";
-            case ALREADY_LOGGED:        return "Questo User è già loggato";
-            case NOT_LOGGED:            return "Non sei ancora loggato! Effettua il logIn e ritenta";
-            case USER_UNKNOWN:          return "L'utente non è esiste";
-            case DOCUMENT_UNKNOWN:      return "Il documento non esiste";
-            case DUPLICATE_DOCUMENT:    return "Documento già presente";
-            case NOTIFICATION:          return "Notifica";
+            case OK:                    return s + "Operazione OK";
+            case FAIL:                  return s + "Operazione Fallita";
+            case UNAUTHORIZED:          return s + "Operazione non autorizzata";
+            case SECTION_BUSY:          return s + "La sezione sta già subendo un editing";
+            case SECTION_SIZE_EXCEEDED: return s + "La sezione eccede le dimensioni massime";
+            case WRONG_PSW:             return s + "Password errata";
+            case WRONG_REQUEST:         return s + "Richiesta mal formattata";
+            case ALREADY_LOGGED:        return s + "Questo User è già loggato";
+            case NOT_LOGGED:            return s + "Non sei ancora loggato! Effettua il logIn e ritenta";
+            case USER_UNKNOWN:          return s + "L'utente non è esiste";
+            case DOCUMENT_UNKNOWN:      return s + "Il documento non esiste";
+            case DUPLICATE_DOCUMENT:    return s + "Documento già presente";
+            case NOTIFICATION:          return s + "Notifica";
+            case USERNAME_EXISTS:       return s + "Username già occupato";
 
-            default:                    return "Operazione Ignota";
+            default:                    return s + "Operazione Ignota";
         }
     }
 }

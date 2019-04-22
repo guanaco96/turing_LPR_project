@@ -19,9 +19,26 @@ public class TaskExecutor implements Runnable {
     private SocketChannel socketChannel;
 
     /**
-     * Costruttore vuoto
+     * Costruttore
      */
-    TaskExecutor() {}
+    public TaskExecutor(   ConcurrentHashMap<String,User> usrMp,
+                    ConcurrentHashMap<String,Document> docMp,
+                    ConcurrentHashMap<SocketChannel,User> sckMp,
+                    BlockingQueue<SocketChannel> q,
+                    Selector sel,
+                    DatagramChannel datagram,
+                    ChatHandler chat,
+                    SocketChannel socket) {
+
+        userMap = usrMp;
+        documentMap = docMp;
+        socketMap = sckMp;
+        queue = q;
+        selector = sel;
+        datagramChannel = datagram;
+        chatHandler = chat;
+        socketChannel = socket;
+    }
 
     /**
      *
@@ -29,8 +46,10 @@ public class TaskExecutor implements Runnable {
      */
     private void logOut() {
         User user = socketMap.remove(socketChannel);
-        Document document = user.logOut();
-        if(document != null) document.logOut(user);
+        if (user != null) {
+            Document document = user.logOut();
+            if (document != null) document.logOut(user);
+        }
     }
 
     /**
@@ -40,6 +59,10 @@ public class TaskExecutor implements Runnable {
     Message satisfy(Message request) throws IOException {
         Vector<byte[]> chunks = request.segment();
         User user = socketMap.get(socketChannel);
+
+        // TODO
+        // System.out.println("request.getOp() = " + request.getOp() + "\nuser = " + user);
+
         if (request.getOp() != Operation.LOGIN && user == null) return new Message(Operation.NOT_LOGGED);
 
         switch (request.getOp()) {
@@ -158,10 +181,18 @@ public class TaskExecutor implements Runnable {
             request = Message.read(socketChannel);
             reply = satisfy(request);
             reply.write(socketChannel);
+
+            // TODO
+            // System.out.println("reply.getOp() = " + reply.getOp());
+
             if (request.getOp() == Operation.LOGOUT) socketChannel.close();
             else queue.put(socketChannel);
         }
         catch (IOException | InterruptedException e) {
+
+            // TODO
+            // e.printStackTrace();
+
             logOut();
             try {
                 socketChannel.close();
@@ -169,7 +200,7 @@ public class TaskExecutor implements Runnable {
         }
 
         if (request != null && request.getOp() == Operation.LOGIN) {
-            User user = userMap.get(socketChannel);
+            User user = socketMap.get(socketChannel);
             user.sendIfWasInvited(datagramChannel);
         }
         selector.wakeup();

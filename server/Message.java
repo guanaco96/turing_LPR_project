@@ -24,7 +24,7 @@ public class Message {
     /**
      * Costruttore vuoto
      */
-    Message(){};
+    public Message(){};
 
     /**
      * Costruttore che prende il corpo da un Vector.
@@ -98,6 +98,10 @@ public class Message {
         if (message.size != 0) {
             message.buffer = ByteBuffer.allocate(message.size);
         }
+        // TODO
+        // System.out.println("message.size = " + message.size);
+
+        message.buffer = ByteBuffer.allocate(message.size);
         readBytes(channel, message.buffer, message.size);
         return message;
     }
@@ -111,6 +115,11 @@ public class Message {
         ByteBuffer hdr = ByteBuffer.allocate(8);
         hdr.putInt(op.number);
         hdr.putInt(size);
+
+        //TODO
+        // System.out.println("message.op = " + this.op +
+            //                "\nmessage.size = " + this.size);
+
         hdr.flip();
         writeBytes(channel, hdr, 8);
         writeBytes(channel, buffer, size);
@@ -124,6 +133,9 @@ public class Message {
      * @throws IOException se la SocketChannel.read la solleva o se si raggiunge End of Stream
      */
     private static void readBytes(SocketChannel channel, ByteBuffer buffer, int size) throws IOException {
+        // TODO
+        // System.out.println("size in readBytes = " + size);
+
         while (size > 0) {
             int tmp = channel.read(buffer);
             if (tmp < 0) throw new IOException();

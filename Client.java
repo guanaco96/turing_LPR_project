@@ -35,7 +35,7 @@ public class Client {
             "show <doc>                      mostra l’intero documento\n    " +
             "list                            mostra la lista dei documenti\n    " +
             "edit <doc> <sec>                modifica una sezione del documento\n    " +
-            "endedit <doc> <sec>             fine modifica della sezione del doc\n    " +
+            "end-edit <doc> <sec>             fine modifica della sezione del doc\n    " +
             "send <msg>                      invia un msg in chat\n    " +
             "receive                         visualizza i msg ricevuti sulla chat\n\n"
         );
@@ -43,10 +43,16 @@ public class Client {
 
     public static void main(String[] args) {
         try {
-            SocketChannel socket = SocketChannel.open();
-            InetAddress localAddress = InetAddress.getByName(null);
-            socket.connect(new InetSocketAddress(localAddress, Config.portTCP));
-
+            SocketChannel socket = null;
+            try {
+                socket = SocketChannel.open();
+                InetAddress localAddress = InetAddress.getByName(null);
+                socket.connect(new InetSocketAddress(localAddress, Config.portTCP));
+            }
+            catch (IOException exc) {
+                System.out.println("\nImpossibile connettersi al server\n");
+                System.exit(-1);
+            }
             // TODO
             int simu = (args.length > 0) ? 0 : 100;
 
@@ -54,80 +60,86 @@ public class Client {
 
                 Vector<String> token = new Vector<>();
                 // TODO
-                if (simu < 4) {
-                    if (args[0].equals("vale")) {
-                        if (simu == 3) {
-                            System.in.read();
-                            System.out.printf("[share]: ");
-                            token = new Vector<>();
-                            token.add("share");
-                            token.add("contra");
-                            token.add("jaco");
-                            simu++;
-                        }
-                        if (simu == 2) {
-                            System.out.printf("[register]: ");
-                            token = new Vector<>();
-                            token.add("create");
-                            token.add("contra");
-                            token.add("5");
-                            simu++;
-                        }
-                        if (simu == 1) {
-                            System.out.printf("[login]: ");
-                            token = new Vector<>();
-                            token.add("login");
-                            token.add("vale");
-                            token.add("daje");
-                            simu++;
-                        }
-                        if (simu == 0) {
-                            System.out.printf("[create]: ");
-                            token = new Vector<>();
-                            token.add("register");
-                            token.add("vale");
-                            token.add("daje");
-                            simu++;
-                        }
+                if (simu < 4 && args[0].equals("vale")) {
+                    if (simu == 3) {
+                        System.in.read();
+                        System.out.printf("[share]: ");
+                        token = new Vector<>();
+                        token.add("share");
+                        token.add("contra");
+                        token.add("jaco");
+                        simu++;
                     }
-                    if (args[0].equals("jaco")) {
-                        if (simu == 3) {
-                            System.in.read();
-                            System.out.printf("[show]: ");
-                            token = new Vector<>();
-                            token.add("show");
-                            token.add("contra");
-                            token.add("1");
-                            simu++;
-                        }
-                        if (simu == 2) {
-                            System.out.printf("[register]: ");
-                            token = new Vector<>();
-                            token.add("create");
-                            token.add("nietzsche");
-                            token.add("7");
-                            simu++;
-                        }
-                        if (simu == 1) {
-                            System.out.printf("[login]: ");
-                            token = new Vector<>();
-                            token.add("login");
-                            token.add("jaco");
-                            token.add("mela");
-                            simu++;
-                        }
-                        if (simu == 0) {
-                            System.out.printf("[create]: ");
-                            token = new Vector<>();
-                            token.add("register");
-                            token.add("jaco");
-                            token.add("mela");
-                            simu++;
-                        }
+                    if (simu == 2) {
+                        System.out.printf("[register]: ");
+                        token = new Vector<>();
+                        token.add("create");
+                        token.add("contra");
+                        token.add("5");
+                        simu++;
                     }
-                } else{
+                    if (simu == 1) {
+                        System.out.printf("[login]: ");
+                        token = new Vector<>();
+                        token.add("login");
+                        token.add("vale");
+                        token.add("daje");
+                        simu++;
+                    }
+                    if (simu == 0) {
+                        System.out.printf("[create]: ");
+                        token = new Vector<>();
+                        token.add("register");
+                        token.add("vale");
+                        token.add("daje");
+                        simu++;
+                    }
+                }
+                else if (simu < 5 && args[0].equals("jaco")) {
+                    if (simu == 4) {
+                        System.out.printf("[show-document]: ");
+                        token = new Vector<>();
+                        token.add("show");
+                        token.add("contra");
+                        simu++;
+                    }
+                    if (simu == 3) {
+                        System.in.read();
+                        System.out.printf("[show-section]: ");
+                        token = new Vector<>();
+                        token.add("show");
+                        token.add("contra");
+                        token.add("1");
+                        simu++;
+                    }
+                    if (simu == 2) {
+                        System.out.printf("[register]: ");
+                        token = new Vector<>();
+                        token.add("create");
+                        token.add("nietzsche");
+                        token.add("7");
+                        simu++;
+                    }
+                    if (simu == 1) {
+                        System.out.printf("[login]: ");
+                        token = new Vector<>();
+                        token.add("login");
+                        token.add("jaco");
+                        token.add("mela");
+                        simu++;
+                    }
+                    if (simu == 0) {
+                        System.out.printf("[create]: ");
+                        token = new Vector<>();
+                        token.add("register");
+                        token.add("jaco");
+                        token.add("mela");
+                        simu++;
+                    }
+                }
+                else {
 
-                    System.out.printf("turing >> ");
+                    System.out.printf("[turing] >> ");
                     Scanner scanner = new Scanner(System.in);
                     String line = scanner.nextLine();
                     StringTokenizer tokenizer = new StringTokenizer(line);
@@ -226,6 +238,7 @@ public class Client {
                         wrongCommand();
                         break;
                     }
+                    //----------- SHOW SECTION -----------
                     if (token.size() == 3) {
                             documentName = token.get(1);
                             n = Integer.parseInt(token.get(2));
@@ -234,34 +247,82 @@ public class Client {
                             a2.putInt(n);
                             a2.flip();
 
-                            request = new Message(Operation.SHOW_SECTION);
+                            request = new Message(Operation.SHOW_SECTION, a1, a2);
                             request.write(socket);
                             reply = Message.read(socket);
-                            Vector<byte[]> chunks = reply.segment();
-                            int isBusy = ByteBuffer.wrap(chunks.get(0)).getInt();
-                            ByteBuffer section = ByteBuffer.wrap(chunks.get(1));
                             if (reply.getOp() != Operation.OK) {
                                 System.out.println(reply.getOp());
                                 break;
                             }
+                            Vector<byte[]> chunks = reply.segment();
+                            int isBusy = ByteBuffer.wrap(chunks.get(0)).getInt();
+                            ByteBuffer section = ByteBuffer.wrap(chunks.get(1));
                             try {
-                                Path path = Paths.get(loggedName, documentName, "section_" + n);
+                                Path path = Paths.get(loggedName, documentName);
+                                try {
+                                    Files.createDirectories(path);
+                                    path = path.resolve("section_" + n);
+                                    Files.deleteIfExists(path);
+                                    Files.createFile(path);
+                                }
+                                catch (IOException exc) {}
                                 FileChannel channel = FileChannel.open(path, StandardOpenOption.TRUNCATE_EXISTING);
                                 while (section.hasRemaining()) {
                                     channel.write(section);
                                 }
+
+                                System.out.println(reply.getOp());
+                                System.out.printf("\t  La sezione " + n + " di " + documentName + " è ");
+                                if (isBusy > 0) System.out.println("libera");
+                                else System.out.println("occupata");
                             }
                             catch (IOException e) {
                                 System.out.println(Operation.FAIL);
+                            }
+                            break;
+                        }
+                        //---------------------------------------
+                        //---------- SHOW DOCUMENT --------------
+                        if (token.size() == 2) {
+                            documentName = token.get(1);
+                            a1 = ByteBuffer.wrap(documentName.getBytes());
+
+                            request = new Message(Operation.SHOW_DOCUMENT, a1);
+                            request.write(socket);
+                            reply = Message.read(socket);
+                            if (reply.getOp() != Operation.OK) {
+                                System.out.println(reply.getOp());
                                 break;
                             }
-                            System.out.println(reply.getOp());
-                        }
-                        if (token.size() == 2) {
+                            Vector<byte[]> chunks = reply.segment();
+                            try {
+                                Path path = Paths.get(loggedName, documentName);
+                                Files.createDirectories(path);
+                                for (int i = 1; i < chunks.size(); i++) {
+                                    Path tmpPath = path.resolve("section_" + i);
+                                    Files.deleteIfExists(tmpPath);
+                                    Files.createFile(tmpPath);
+                                    ByteBuffer section = ByteBuffer.wrap(chunks.get(i));
+                                    FileChannel channel = FileChannel.open(tmpPath, StandardOpenOption.TRUNCATE_EXISTING);
+                                    while (section.hasRemaining()) {
+                                        channel.write(section);
+                                    }
+                                }
 
-
+                                System.out.println(reply.getOp());
+                                ByteBuffer busySections = ByteBuffer.wrap(chunks.get(0));
+                                for (int i = 1; i < chunks.size(); i++) {
+                                    System.out.printf("La sezione " + i + " di " + documentName + " è ");
+                                    if (busySections.getInt() > 0) System.out.println("occupata");
+                                    else System.out.println("libera");
+                                }
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                                System.out.println(Operation.FAIL);
+                            }
+                            break;
                         }
-                        break;
 
                     default:
                         wrongCommand();

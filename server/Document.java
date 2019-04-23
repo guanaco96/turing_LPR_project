@@ -197,11 +197,12 @@ public class Document {
     synchronized Message showDocument(User user) throws IOException {
         if(user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
         // per 0 <= i <= numberOfSections il byte i-esimo del corpo del messaggio vale 1 sse la sezione è occupata
-        ByteBuffer busySections = ByteBuffer.allocate(numberOfSections);
+        ByteBuffer busySections = ByteBuffer.allocate(4 * numberOfSections);
         for (int i = 0; i < numberOfSections; i++) {
             if (editingUser[i] == null) busySections.putInt(0);
             else busySections.putInt(1);
         }
+        busySections.flip();
 
         Vector<ByteBuffer> documentBuffer = new Vector<ByteBuffer>();
         documentBuffer.add(busySections);
@@ -223,9 +224,10 @@ public class Document {
     synchronized Message showSection(User user, int section) throws IOException {
         if (user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
         // il primo byte del messaggio contiene 0 se la sezione è libera e 1 se è occupata.
-        ByteBuffer busySection = ByteBuffer.allocate(1);
+        ByteBuffer busySection = ByteBuffer.allocate(4);
         if (editingUser[section] == null) busySection.putInt(0);
         else busySection.putInt(1);
+        busySection.flip();
 
         return new Message(Operation.OK, busySection, sectionToBytes(section));
     }

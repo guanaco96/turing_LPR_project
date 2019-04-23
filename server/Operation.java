@@ -72,13 +72,13 @@ public enum Operation {
         String s = "\t  ";
         switch (this) {
             case OK:                    return s + "Operazione eseguita con successo";
-            case FAIL:                  return s + "Operazione Fallita";
+            case FAIL:                  return s + "Operazione fallita";
             case UNAUTHORIZED:          return s + "Operazione non autorizzata";
             case SECTION_BUSY:          return s + "La sezione sta già subendo un editing";
             case SECTION_SIZE_EXCEEDED: return s + "La sezione eccede le dimensioni massime";
             case WRONG_PSW:             return s + "Password errata";
             case WRONG_REQUEST:         return s + "Richiesta mal formattata";
-            case ALREADY_LOGGED:        return s + "Questo User è già loggato";
+            case ALREADY_LOGGED:        return s + "Questo user è già loggato";
             case NOT_LOGGED:            return s + "Non sei ancora loggato! Effettua il logIn e ritenta";
             case USER_UNKNOWN:          return s + "L'utente non è esiste";
             case DOCUMENT_UNKNOWN:      return s + "Il documento non esiste";

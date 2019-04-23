@@ -74,7 +74,7 @@ public enum Operation {
             case OK:                    return s + "Operazione eseguita con successo";
             case FAIL:                  return s + "Operazione fallita";
             case UNAUTHORIZED:          return s + "Operazione non autorizzata";
-            case SECTION_BUSY:          return s + "La sezione sta già subendo un editing";
+            case SECTION_BUSY:          return s + "La sezione è occupata";
             case SECTION_SIZE_EXCEEDED: return s + "La sezione eccede le dimensioni massime";
             case WRONG_PSW:             return s + "Password errata";
             case WRONG_REQUEST:         return s + "Richiesta mal formattata";

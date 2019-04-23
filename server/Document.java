@@ -60,25 +60,21 @@ public class Document {
      *
      *
      */
-    synchronized Message getChatAddress(User user) {
+    synchronized ByteBuffer getChatAddress(User user) throws IOException {
+        // TODO delete this shit
+        /*
         int sec = 0;
-        while (editingUser[sec] != user) sec++;
+        while (sec < numberOfSections && editingUser[sec] != user) sec++;
         if (sec == numberOfSections) return new Message(Operation.UNAUTHORIZED);
 
         ByteBuffer portBuffer = ByteBuffer.allocate(4);
         portBuffer.putInt(chatHandler.getPort());
+        */
 
         if (chatAddress == null) {
-            try {
-                chatAddress = chatHandler.generateAddress();
-            }
-            catch (Exception e) {
-                return new Message(Operation.FAIL);
-            }
+            chatAddress = chatHandler.generateAddress();
         }
-        ByteBuffer addressBuffer = ByteBuffer.wrap(chatAddress.getBytes());
-
-        return new Message(Operation.OK, portBuffer, addressBuffer);
+        return ByteBuffer.wrap(chatAddress.getBytes());
     }
 
     /**
@@ -157,7 +153,7 @@ public class Document {
         if (editingUser[section] != null) return new Message(Operation.SECTION_BUSY);
 
         editingUser[section] = user;
-        return new Message(Operation.OK, sectionToBytes(section));
+        return new Message(Operation.OK, sectionToBytes(section), getChatAddress(user));
     }
 
     /**
@@ -256,7 +252,7 @@ public class Document {
      */
     void freeIfUseless() {
         int sec = 0;
-        while (editingUser[sec] == null) sec++;
+        while (sec < numberOfSections && editingUser[sec] == null) sec++;
         if (sec == numberOfSections) {
             chatHandler.freeAddress(chatAddress);
             chatAddress = null;

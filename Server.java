@@ -45,6 +45,7 @@ public class Server {
         socketMap = new ConcurrentHashMap<>();
         queue = new LinkedBlockingDeque<>();
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Config.threadsInPool);
+        chatHandler = new ChatHandler(Config.base, Config.bound, Config.portChat);
 
         try {
             // attivo il servizio di registrazione RMI

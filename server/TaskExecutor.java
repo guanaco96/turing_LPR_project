@@ -21,15 +21,14 @@ public class TaskExecutor implements Runnable {
     /**
      * Costruttore
      */
-    public TaskExecutor(   ConcurrentHashMap<String,User> usrMp,
-                    ConcurrentHashMap<String,Document> docMp,
-                    ConcurrentHashMap<SocketChannel,User> sckMp,
-                    BlockingQueue<SocketChannel> q,
-                    Selector sel,
-                    DatagramChannel datagram,
-                    ChatHandler chat,
-                    SocketChannel socket) {
-
+    public TaskExecutor(ConcurrentHashMap<String,User> usrMp,
+                        ConcurrentHashMap<String,Document> docMp,
+                        ConcurrentHashMap<SocketChannel,User> sckMp,
+                        BlockingQueue<SocketChannel> q,
+                        Selector sel,
+                        DatagramChannel datagram,
+                        ChatHandler chat,
+                        SocketChannel socket) {
         userMap = usrMp;
         documentMap = docMp;
         socketMap = sckMp;
@@ -64,6 +63,9 @@ public class TaskExecutor implements Runnable {
         // System.out.println("request.getOp() = " + request.getOp() + "\nuser = " + user);
 
         if (request.getOp() != Operation.LOGIN && user == null) return new Message(Operation.NOT_LOGGED);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+        if (chatHandler == null) System.out.println("chatHandler == null");
 
         switch (request.getOp()) {
 
@@ -147,9 +149,10 @@ public class TaskExecutor implements Runnable {
                 }
                 catch (IOException e) {
                     user.endEdit();
+                    return new Message(Operation.FAIL);
                 }
-                if (msg != null && msg.getOp() != Operation.OK) user.endEdit();
-                return new Message(reply);
+                if (msg.getOp() != Operation.OK) user.endEdit();
+                return msg;
             }
             case END_EDIT: {
                 if (chunks.size() != 3) return new Message(Operation.WRONG_REQUEST);

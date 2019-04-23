@@ -12,9 +12,69 @@ import java.rmi.registry.*;
 import java.net.*;
 import java.util.*;
 
+class Chatter implements Runnable {
+    private final int dpSize = 8192;
+    private InetAddress ia;
+    private MulticastSocket ms;
+
+    /**
+     *
+     *
+     */
+    Chatter(InetAddress inetAddress) {
+        ia = inetAddress;
+    }
+
+    /**
+     *
+     *
+     */
+    public void run() {
+        try {
+            ms = new MulticastSocket(Config.portChat);
+            ms.joinGroup(ia);
+
+            byte[] buffer = new byte[dpSize];
+            DatagramPacket dp = new DatagramPacket(buffer, dpSize);
+
+            ms.receive(dp);
+            while (!Thread.interrupted()) {
+                Client.pendingMessages.add(new String(dp.getData()));
+                ms.receive(dp);
+            }
+        }
+        catch (IOException e) {
+            System.out.println("\nErrore nella chat multicast\n");
+        }
+    }
+
+
+}
+
 public class Client {
 
     static String loggedName;
+    static DatagramSocket dgSocket;
+    static Vector<String> pendingMessages;
+    static Thread listener;
+
+    static void saveSection(String docName, int num, byte[] data) {
+        try {
+            Path path = Paths.get(loggedName, docName);
+            Files.createDirectories(path);
+            path = path.resolve("section_" + num);
+            // ?? Files.deleteIfExists(path);
+            // ?? Files.createFile(path);
+            FileChannel channel = FileChannel.open(path, StandardOpenOption.TRUNCATE_EXISTING,
+                                                         StandardOpenOption.CREATE_NEW);
+            ByteBuffer section = ByteBuffer.wrap(data);
+            while (section.hasRemaining()) {
+                channel.write(section);
+            }
+        }
+        catch (Exception e) {}
+    }
+
 
     static void wrongCommand() {
         System.out.printf(
@@ -35,7 +95,7 @@ public class Client {
             "show <doc>                      mostra l’intero documento\n    " +
             "list                            mostra la lista dei documenti\n    " +
             "edit <doc> <sec>                modifica una sezione del documento\n    " +
-            "end-edit <doc> <sec>             fine modifica della sezione del doc\n    " +
+            "end-edit <doc> <sec>            fine modifica della sezione del doc\n    " +
             "send <msg>                      invia un msg in chat\n    " +
             "receive                         visualizza i msg ricevuti sulla chat\n\n"
         );
@@ -48,6 +108,8 @@ public class Client {
                 socket = SocketChannel.open();
                 InetAddress localAddress = InetAddress.getByName(null);
                 socket.connect(new InetSocketAddress(localAddress, Config.portTCP));
+                dgSocket = new DatagramSocket(Config.portChat);
+                dgSocket.setReuseAddress(true);
             }
             catch (IOException exc) {
                 System.out.println("\nImpossibile connettersi al server\n");
@@ -62,7 +124,7 @@ public class Client {
                 // TODO
                 if (simu < 4 && args[0].equals("vale")) {
                     if (simu == 3) {
-                        System.in.read();
+                    //    System.in.read();
                         System.out.printf("[share]: ");
                         token = new Vector<>();
                         token.add("share");
@@ -71,7 +133,7 @@ public class Client {
                         simu++;
                     }
                     if (simu == 2) {
-                        System.out.printf("[register]: ");
+                        System.out.printf("[create]: ");
                         token = new Vector<>();
                         token.add("create");
                         token.add("contra");
@@ -87,7 +149,7 @@ public class Client {
                         simu++;
                     }
                     if (simu == 0) {
-                        System.out.printf("[create]: ");
+                        System.out.printf("[resgister]: ");
                         token = new Vector<>();
                         token.add("register");
                         token.add("vale");
@@ -95,8 +157,8 @@ public class Client {
                         simu++;
                     }
                 }
-                else if (simu < 5 && args[0].equals("jaco")) {
-                    if (simu == 4) {
+                else if (simu < 3 && args[0].equals("jaco")) {
+                    /*if (simu == 4) {
                         System.out.printf("[show-document]: ");
                         token = new Vector<>();
                         token.add("show");
@@ -111,9 +173,9 @@ public class Client {
                         token.add("contra");
                         token.add("1");
                         simu++;
-                    }
+                    }*/
                     if (simu == 2) {
-                        System.out.printf("[register]: ");
+                        System.out.printf("[create]: ");
                         token = new Vector<>();
                         token.add("create");
                         token.add("nietzsche");
@@ -129,7 +191,7 @@ public class Client {
                         simu++;
                     }
                     if (simu == 0) {
-                        System.out.printf("[create]: ");
+                        System.out.printf("[register]: ");
                         token = new Vector<>();
                         token.add("register");
                         token.add("jaco");
@@ -147,6 +209,8 @@ public class Client {
                         token.add(tokenizer.nextToken());
                     }
                 }
+
+                ByteBuffer a1 = null, a2 = null, a3 = null;
 
                 switch (token.get(0)) {
                     case "help":
@@ -174,9 +238,9 @@ public class Client {
                         }
                         String usr = token.get(1);
                         String psw = token.get(2);
-                        ByteBuffer a1 = ByteBuffer.wrap(usr.getBytes());
-                        ByteBuffer a2 = ByteBuffer.wrap(psw.getBytes());
-                        ByteBuffer a3 = ByteBuffer.allocate(4);
+                        a1 = ByteBuffer.wrap(usr.getBytes());
+                        a2 = ByteBuffer.wrap(psw.getBytes());
+                        a3 = ByteBuffer.allocate(4);
                         // TODO serve davvero mandargli questo dato che si trova nel file di configurazione???
                         a3.putInt(Config.portUDP);
                         a3.flip();
@@ -298,6 +362,7 @@ public class Client {
                                 Path path = Paths.get(loggedName, documentName);
                                 Files.createDirectories(path);
                                 ByteBuffer busySections = ByteBuffer.wrap(chunks.get(0));
+                                System.out.println("\nStato del documento:\n");
                                 for (int i = 1; i < chunks.size(); i++) {
                                     System.out.printf("La sezione " + i + " di " + documentName + " è ");
                                     if (busySections.getInt() > 0) {
@@ -316,7 +381,6 @@ public class Client {
                                     }
                                 }
 
-                                System.out.println("\nStato del documento:\n");
                             }
                             catch (IOException e) {
                                 e.printStackTrace();
@@ -357,19 +421,96 @@ public class Client {
                     a2 = ByteBuffer.allocate(4);
                     a2.putInt(n);
                     a2.flip();
+
                     request = new Message(Operation.START_EDIT, a1, a2);
                     request.write(socket);
                     reply = Message.read(socket);
+                    chunks = reply.segment();
+
+                    saveSection(documentName, n, chunks.get(0));
+
+                    InetAddress ia = InetAddress.getByName(new String(chunks.get(1)));
+                    listener = new Thread(new Chatter(ia));
+                    dgSocket.connect(new InetSocketAddress(ia, Config.portChat));
+
                     System.out.println(reply.getOp());
                     break;
 
+                case "end-edit":
+                    if (token.size() != 3) {
+                        wrongCommand();
+                        break;
+                    }
+                    documentName = token.get(1);
+                    n = Integer.parseInt(token.get(2));
+                    a1 = ByteBuffer.wrap(documentName.getBytes());
+                    a2 = ByteBuffer.allocate(4);
+                    a2.putInt(n);
+                    a2.flip();
+                    Path path = Paths.get(loggedName, documentName, "section_" + n);
+                    try {
+                        FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
+                        int size = (int) channel.size();
+                        a3 = ByteBuffer.allocate(size);
+                        while (size > 0) {
+                            int tmp = channel.read(a3);
+                            if (tmp < 0) {
+                                System.out.println(Operation.FAIL);
+                                break;
+                            }
+                            size -= tmp;
+                        }
+                        a3.flip();
+                    }
+                    catch (IOException e) {}
+                    request = new Message(Operation.END_EDIT, a1, a2, a3);
+                    request.write(socket);
+                    reply = Message.read(socket);
 
-                    default:
+                    ia = null;
+                    listener.interrupt();
+
+                    System.out.println(reply.getOp());
+                    break;
+
+                case "send":
+                    if (token.size() < 2) {
+                        wrongCommand();
+                        break;
+                    }
+                    String text = "[" + loggedName + "]: ";
+                    text.concat(token.get(1));
+                    for (int i = 2; i < token.size(); i++) {
+                        text.concat(" " + token.get(i));
+                    }
+                    byte[] byteMsg = text.getBytes();
+                    if (byteMsg.length > 8192) {
+                        System.out.println("Messaggio troppo lungo");
+                        break;
+                    }
+                    DatagramPacket dp = new DatagramPacket(byteMsg, byteMsg.length);
+                    dgSocket.send(dp);
+                    break;
+
+                case "receive":
+                    if (token.size() != 1) {
+                        wrongCommand();
+                        break;
+                    }
+                    System.out.println("Messaggi ricevuti:\n");
+                    for (String s : pendingMessages) {
+                        System.out.println(s + "\n");
+                    }
+                    pendingMessages.removeAllElements();
+                    break;
+
+                default:
                         wrongCommand();
                 }
             }
         }
         catch (Exception e) {
+            System.out.println("\nErrore nel server\n");
             e.printStackTrace();
         }
 
@@ -377,3 +518,14 @@ public class Client {
     }
 
 }
+
+//TODO
+// eliminare printStackTrace
+// refacotring totale per eliminare switch enormi
+// formattare output console
+// vedere se la gestione delle operazioni / eccezioni è ridondante
+// refactoring gestione delle eccezioni
+
+// documentare e commentare
+// scrivere relazione
+// ULTIMA COSA: cambiare il path in cui il client salva i suoi documenti (?)

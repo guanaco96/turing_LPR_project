@@ -137,6 +137,7 @@ public class TaskExecutor implements Runnable {
                 String documentName = new String(chunks.get(0));
                 int section = ByteBuffer.wrap(chunks.get(1)).getInt();
                 Document document = documentMap.get(documentName);
+                if (document == null) return new Message(Operation.DOCUMENT_UNKNOWN);
 
                 Operation reply = user.startEdit(document);
                 if (reply != Operation.OK) return new Message(reply);

@@ -222,6 +222,8 @@ public class Document {
      * @throws IOException sollevata da sectionToBytes
      */
     synchronized Message showSection(User user, int section) throws IOException {
+        section--;
+
         if (user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
         // il primo byte del messaggio contiene 0 se la sezione è libera e 1 se è occupata.
         ByteBuffer busySection = ByteBuffer.allocate(4);

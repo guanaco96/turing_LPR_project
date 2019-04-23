@@ -271,10 +271,9 @@ public class Client {
                                     channel.write(section);
                                 }
 
-                                System.out.println(reply.getOp());
                                 System.out.printf("\t  La sezione " + n + " di " + documentName + " è ");
-                                if (isBusy > 0) System.out.println("libera");
-                                else System.out.println("occupata");
+                                if (isBusy > 0) System.out.println("occupata");
+                                else System.out.println("libera");
                             }
                             catch (IOException e) {
                                 System.out.println(Operation.FAIL);
@@ -298,24 +297,26 @@ public class Client {
                             try {
                                 Path path = Paths.get(loggedName, documentName);
                                 Files.createDirectories(path);
-                                for (int i = 1; i < chunks.size(); i++) {
-                                    Path tmpPath = path.resolve("section_" + i);
-                                    Files.deleteIfExists(tmpPath);
-                                    Files.createFile(tmpPath);
-                                    ByteBuffer section = ByteBuffer.wrap(chunks.get(i));
-                                    FileChannel channel = FileChannel.open(tmpPath, StandardOpenOption.TRUNCATE_EXISTING);
-                                    while (section.hasRemaining()) {
-                                        channel.write(section);
-                                    }
-                                }
-
-                                System.out.println(reply.getOp());
                                 ByteBuffer busySections = ByteBuffer.wrap(chunks.get(0));
                                 for (int i = 1; i < chunks.size(); i++) {
                                     System.out.printf("La sezione " + i + " di " + documentName + " è ");
-                                    if (busySections.getInt() > 0) System.out.println("occupata");
-                                    else System.out.println("libera");
+                                    if (busySections.getInt() > 0) {
+                                        System.out.println("occupata");
+                                    }
+                                    else {
+                                        System.out.println("libera");
+                                        Path tmpPath = path.resolve("section_" + i);
+                                        Files.deleteIfExists(tmpPath);
+                                        Files.createFile(tmpPath);
+                                        ByteBuffer section = ByteBuffer.wrap(chunks.get(i));
+                                        FileChannel channel = FileChannel.open(tmpPath, StandardOpenOption.TRUNCATE_EXISTING);
+                                        while (section.hasRemaining()) {
+                                            channel.write(section);
+                                        }
+                                    }
                                 }
+
+                                System.out.println("\nStato del documento:\n");
                             }
                             catch (IOException e) {
                                 e.printStackTrace();
@@ -323,6 +324,45 @@ public class Client {
                             }
                             break;
                         }
+
+                    case "list":
+                    if (token.size() != 1) {
+                        wrongCommand();
+                        break;
+                    }
+                    request = new Message(Operation.LIST);
+                    request.write(socket);
+                    reply = Message.read(socket);
+                    if (reply.getOp() != Operation.OK) {
+                        System.out.println(reply.getOp());
+                        break;
+                    }
+
+                    Vector<byte[]> chunks = reply.segment();
+                    System.out.println("\nLista dei documenti che puoi editare:\n");
+                    for (byte[] bb : chunks) {
+                        String docName = new String(bb);
+                        System.out.println(docName);
+                    }
+                    break;
+
+                case "edit":
+                    if (token.size() != 3) {
+                        wrongCommand();
+                        break;
+                    }
+                    documentName = token.get(1);
+                    n = Integer.parseInt(token.get(2));
+                    a1 = ByteBuffer.wrap(documentName.getBytes());
+                    a2 = ByteBuffer.allocate(4);
+                    a2.putInt(n);
+                    a2.flip();
+                    request = new Message(Operation.START_EDIT, a1, a2);
+                    request.write(socket);
+                    reply = Message.read(socket);
+                    System.out.println(reply.getOp());
+                    break;
+
 
                     default:
                         wrongCommand();

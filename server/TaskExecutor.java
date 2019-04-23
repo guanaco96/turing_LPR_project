@@ -201,7 +201,7 @@ public class TaskExecutor implements Runnable {
 
         if (request != null && request.getOp() == Operation.LOGIN) {
             User user = socketMap.get(socketChannel);
-            user.sendIfWasInvited(datagramChannel);
+            if (user != null) user.sendIfWasInvited(datagramChannel);
         }
         selector.wakeup();
     }

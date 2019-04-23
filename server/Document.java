@@ -91,13 +91,13 @@ public class Document {
         try { Files.createDirectories(path);}
         catch (IOException e) { return Operation.FAIL;}
 
-        for (int i = 0; i < numberOfSections; i++) {
+        for (int i = 1; i <= numberOfSections; i++) {
             try {
-                sectionPath[i] = path.resolve("section_" + i);
-                Files.createFile(sectionPath[i]);
+                sectionPath[i - 1] = path.resolve("section_" + i);
+                Files.createFile(sectionPath[i - 1]);
             }
             catch (FileAlreadyExistsException e) {
-                try { Files.delete(sectionPath[i]);}
+                try { Files.delete(sectionPath[i - 1]);}
                 catch (IOException exc) { return Operation.FAIL;}
                 i--;
             }

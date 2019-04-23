@@ -69,9 +69,9 @@ public enum Operation {
     * @return una descrizione del tipo di operazione
     */
     public String toString() {
-        String s = "[Server]: ";
+        String s = "\t  ";
         switch (this) {
-            case OK:                    return s + "Operazione OK";
+            case OK:                    return s + "Operazione eseguita con successo";
             case FAIL:                  return s + "Operazione Fallita";
             case UNAUTHORIZED:          return s + "Operazione non autorizzata";
             case SECTION_BUSY:          return s + "La sezione sta già subendo un editing";

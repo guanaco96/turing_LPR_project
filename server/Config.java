@@ -2,7 +2,7 @@ package server;
 
 public class Config {
 
-    public static String basePath = "~/lorenzo/Documenti/reti_di_calcolatori/turing_LPR_project";
+    public static String basePath = "files";
     public static int maxDocumentSize = 1 << 16;
     public static int threadsInPool = 10;
     // time (in milliseconds ) the selector wait for a

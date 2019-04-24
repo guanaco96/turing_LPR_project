@@ -20,9 +20,7 @@ public class Notifier implements Runnable {
             dgc = DatagramChannel.open();
             dgc.bind(null);
         }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
+        catch(Exception e) {}
     }
 
     /**
@@ -49,9 +47,6 @@ public class Notifier implements Runnable {
                 dgc.receive(buffer);
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Sistema di ricezione inviti non funzionanate");
-        }
+        catch (Exception e) {}
     }
 }

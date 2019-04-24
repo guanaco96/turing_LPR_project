@@ -61,16 +61,6 @@ public class Document {
      *
      */
     synchronized ByteBuffer getChatAddress(User user) throws IOException {
-        // TODO delete this shit
-        /*
-        int sec = 0;
-        while (sec < numberOfSections && editingUser[sec] != user) sec++;
-        if (sec == numberOfSections) return new Message(Operation.UNAUTHORIZED);
-
-        ByteBuffer portBuffer = ByteBuffer.allocate(4);
-        portBuffer.putInt(chatHandler.getPort());
-        */
-
         if (chatAddress == null) {
             chatAddress = chatHandler.generateAddress();
         }
@@ -151,7 +141,7 @@ public class Document {
         if (!invitedUser.contains(user)) {
             return new Message(Operation.UNAUTHORIZED);
         }
-        if (section >= numberOfSections) return new Message(Operation.SECTION_UNKNOWN);
+        if (section >= numberOfSections || section < 0) return new Message(Operation.SECTION_UNKNOWN);
         if (editingUser[section] != null) return new Message(Operation.SECTION_BUSY);
 
         editingUser[section] = user;
@@ -223,6 +213,7 @@ public class Document {
         section--;
 
         if (user == null || !invitedUser.contains(user)) return new Message(Operation.UNAUTHORIZED);
+        if (section >= numberOfSections || section < 0) return new Message(Operation.SECTION_SIZE_EXCEEDED);
         // il primo byte del messaggio contiene 0 se la sezione è libera e 1 se è occupata.
         ByteBuffer busySection = ByteBuffer.allocate(4);
         if (editingUser[section] == null) busySection.putInt(0);

@@ -13,6 +13,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.net.*;
+import java.rmi.*;
 import java.rmi.server.*;
 import java.rmi.registry.*;
 
@@ -47,15 +48,21 @@ public class Server {
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Config.threadsInPool);
         chatHandler = new ChatHandler(Config.portChat);
 
+        // attivo il servizio di registrazione RMI
+        RemoteTableImplementation remoteTable = new RemoteTableImplementation(userMap);
         try {
-            // attivo il servizio di registrazione RMI
-            RemoteTableImplementation remoteTable = new RemoteTableImplementation(userMap);
             RemoteTableInterface stub = (RemoteTableInterface) UnicastRemoteObject.exportObject(remoteTable,0);
             LocateRegistry.createRegistry(Config.portRegistryRMI);
             Registry registry = LocateRegistry.getRegistry(Config.portRegistryRMI);
             registry.rebind("REGISTER-TURING",stub);
+        }
+        catch (RemoteException e) {
+            System.out.println("Errore nella creazione dell'oggetto remoto");
+            System.exit(-1);
+        }
 
-            // configuro i canali e registro il ServerSocketChannel welcome nel selector
+        // configuro i canali e registro il ServerSocketChannel welcome nel selector
+        try {
             datagramChannel = DatagramChannel.open();
             datagramChannel.socket().bind(new InetSocketAddress(Config.portUDP));
             welcome = ServerSocketChannel.open();
@@ -63,43 +70,53 @@ public class Server {
             welcome.configureBlocking(false);
             selector = Selector.open();
             welcome.register(selector, SelectionKey.OP_ACCEPT);
+        }
+        catch (IOException e) {
+            System.out.println("Errore nell'inizializzazione dei socket");
+            System.exit(-1);
+        }
 
+        // ciclo di esecuzione del server
+        while (!Thread.interrupted()) {
 
-            // ciclo di esecuzione del server
-            while (!Thread.interrupted()) {
-
-                // registro i socket in coda
-                Vector<SocketChannel> tmpQueue = new Vector<>();
-                queue.drainTo(tmpQueue);
-                for (SocketChannel socket : tmpQueue) {
-                    socket.register(selector, SelectionKey.OP_READ);
+            // registro i socket in coda
+            Vector<SocketChannel> tmpQueue = new Vector<>();
+            queue.drainTo(tmpQueue);
+            for (SocketChannel socket : tmpQueue) {
+                try { socket.register(selector, SelectionKey.OP_READ);}
+                catch (ClosedChannelException e) {
+                    socketMap.remove(socket);
                 }
+            }
 
-                // selezione dei canali pronti per la lettura
-                selector.select(Config.selectorTime);
-                Set<SelectionKey> keySet = selector.selectedKeys();
+            // selezione dei canali pronti per la lettura
+            try { selector.select(Config.selectorTime);}
+            catch (IOException e) { e.printStackTrace();}
 
-                for (Iterator<SelectionKey> it = keySet.iterator(); it.hasNext(); it.remove()) {
-                    SelectionKey key = it.next();
-                    if (key.isAcceptable()) {
-                        SocketChannel newSocketChannel = welcome.accept();
+            Set<SelectionKey> keySet = selector.selectedKeys();
+
+            for (Iterator<SelectionKey> it = keySet.iterator(); it.hasNext(); it.remove()) {
+                SelectionKey key = it.next();
+                if (key.isAcceptable()) {
+                    SocketChannel newSocketChannel = null;
+                    try {
+                        newSocketChannel = welcome.accept();
                         newSocketChannel.configureBlocking(false);
                         newSocketChannel.register(selector, SelectionKey.OP_READ);
                     }
-                    if (key.isReadable()) {
-                        SocketChannel clientSocket = (SocketChannel) key.channel();
-                        key.cancel();
-
-                        TaskExecutor task = new TaskExecutor(userMap, documentMap, socketMap, queue, selector,
-                                                                datagramChannel, chatHandler, clientSocket);
-                        threadPool.execute(task);
+                    catch (IOException e) {
+                        socketMap.remove(newSocketChannel);
                     }
                 }
+                if (key.isReadable()) {
+                    SocketChannel clientSocket = (SocketChannel) key.channel();
+                    key.cancel();
 
+                    TaskExecutor task = new TaskExecutor(userMap, documentMap, socketMap, queue, selector,
+                                                            datagramChannel, chatHandler, clientSocket);
+                    threadPool.execute(task);
+                }
             }
-        }
-        catch (IOException e) {
-            System.out.println("Errore del server!");
         }
     }
 }

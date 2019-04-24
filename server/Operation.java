@@ -36,7 +36,8 @@ public enum Operation {
     SECTION_UNKNOWN(22),
     NOTIFICATION(23),
     USERNAME_EXISTS(24),
-    MESSAGE_TOO_LONG(25);
+    MESSAGE_TOO_LONG(25),
+    NO_CHAT(26);
 
     int number;
     static private Operation[] array = new Operation[30];
@@ -79,7 +80,7 @@ public enum Operation {
             case SECTION_SIZE_EXCEEDED: return s + "La sezione eccede le dimensioni massime";
             case WRONG_PSW:             return s + "Password errata";
             case WRONG_REQUEST:         return s + "Richiesta mal formattata";
-            case ALREADY_LOGGED:        return s + "Questo user è già loggato";
+            case ALREADY_LOGGED:        return s + "Sei già loggato con un altro user";
             case NOT_LOGGED:            return s + "Non sei ancora loggato! Effettua il logIn e ritenta";
             case USER_UNKNOWN:          return s + "L'utente non è esiste";
             case DOCUMENT_UNKNOWN:      return s + "Il documento non esiste";
@@ -87,7 +88,8 @@ public enum Operation {
             case NOTIFICATION:          return s + "Notifica";
             case USERNAME_EXISTS:       return s + "Username già occupato";
             case MESSAGE_TOO_LONG:      return s + "Messaggio troppo lungo";
-            
+            case NO_CHAT:               return s + "Non sei connesso ad alcuna chat";
+
             default:                    return s + "Operazione Ignota";
         }
     }

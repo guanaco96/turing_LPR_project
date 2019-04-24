@@ -72,6 +72,7 @@ public class TaskExecutor implements Runnable {
 
                 InetSocketAddress rsa = (InetSocketAddress) socketChannel.getRemoteAddress();
                 InetSocketAddress udpsa = new InetSocketAddress(rsa.getAddress(), port);
+                if (user == null) return new Message(Operation.USER_UNKNOWN);
                 Operation reply = user.logIn(psw, udpsa);
                 if (reply == Operation.OK) socketMap.put(socketChannel, user);
                 return new Message(reply);
@@ -80,6 +81,7 @@ public class TaskExecutor implements Runnable {
                 if (chunks.size() != 2) return new Message(Operation.WRONG_REQUEST);
                 String documentName = new String(chunks.get(0));
                 int numberOfSections = ByteBuffer.wrap(chunks.get(1)).getInt();
+                if(numberOfSections <= 0) return new Message(Operation.WRONG_REQUEST);
 
                 Document document = new Document(documentName, user, numberOfSections, chatHandler);
                 if (documentMap.putIfAbsent(documentName, document) != null) {
@@ -181,17 +183,11 @@ public class TaskExecutor implements Runnable {
             reply = satisfy(request);
             reply.write(socketChannel);
 
-            // TODO
-            // System.out.println("reply.getOp() = " + reply.getOp());
-
-            if (request.getOp() == Operation.LOGOUT) socketChannel.close();
-            else queue.put(socketChannel);
+            if (request.getOp() == Operation.LOGOUT && reply.getOp() == Operation.OK) {
+                socketChannel.close();
+            } else queue.put(socketChannel);
         }
         catch (IOException | InterruptedException e) {
-
-            // TODO
-            // e.printStackTrace();
-
             logOut();
             try {
                 socketChannel.close();

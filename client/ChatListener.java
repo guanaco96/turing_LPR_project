@@ -29,7 +29,7 @@ public class ChatListener implements Runnable {
     synchronized public void printMsgs() {
         System.out.println("\nMessaggi ricevuti:\n");
         for (String s : pendingMsgs) {
-            System.out.println(s + "\n");
+            System.out.println(s);
         }
         pendingMsgs.removeAllElements();
     }

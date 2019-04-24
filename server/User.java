@@ -117,7 +117,7 @@ public class User {
             wasInvited = true;
             return;
         }
-        String msg = "[" + host.username + "] ti ha invitato a modificare " + doc.getDocumentName();
+        String msg = "(" + host.username + ") ti ha invitato a modificare " + doc.getDocumentName();
         ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
         try {
             channel.send(buffer, clientAddress);

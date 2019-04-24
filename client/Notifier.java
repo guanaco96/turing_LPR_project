@@ -42,7 +42,7 @@ public class Notifier implements Runnable {
 
             while (!Thread.interrupted()) {
                 String notif = new String(buffer.array());
-                System.out.println(notif);
+                System.out.printf("\n\n" + notif + "\n\n[turing] >> ");
                 buffer = ByteBuffer.allocate(100);
                 dgc.receive(buffer);
             }

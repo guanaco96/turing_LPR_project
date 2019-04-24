@@ -132,7 +132,7 @@ public class Client {
 
                 case "send":
                     if (token.size() >= 2) {
-                        String text = "[" + loggedUser + "]: ";
+                        String text = "(" + loggedUser + "): ";
                         text = text.concat(token.get(1));
                         for (int i = 2; i < token.size(); i++) {
                             text = text.concat(" " + token.get(i));
@@ -311,7 +311,7 @@ public class Client {
         Vector<byte[]> chunk = reply.segment();
         int isBusy = ByteBuffer.wrap(chunk.get(0)).getInt();
         byte[] data = chunk.get(1);
-        System.out.printf("\t  La sezione " + numSec + " di " + docName + " è ");
+        System.out.printf("\nLa sezione " + numSec + " di " + docName + " è ");
         if (isBusy != 0) {
             System.out.println("occupata");
         }
@@ -577,14 +577,9 @@ public class Client {
 }
 
 //TODO
-// refacotring totale per eliminare switch enormi
 // formattare output console
 
 // fare la prove su computer diversi immettendo come argomento del client l' IP del server
-// rendere l'IP del server un parametro del client
-// creare client.Config e tutto un pacchetto per il client.
-// eliminare la Config.portUDP (??)
 
 // documentare e commentare
 // scrivere relazione
-// ULTIMA COSA: cambiare il path in cui il client salva i suoi documenti (?)

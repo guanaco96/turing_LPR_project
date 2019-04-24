@@ -71,26 +71,25 @@ public enum Operation {
     * @return una descrizione del tipo di operazione
     */
     public String toString() {
-        String s = "\t  ";
         switch (this) {
-            case OK:                    return s + "Operazione eseguita con successo";
-            case FAIL:                  return s + "Operazione fallita";
-            case UNAUTHORIZED:          return s + "Operazione non autorizzata";
-            case SECTION_BUSY:          return s + "La sezione è occupata";
-            case SECTION_SIZE_EXCEEDED: return s + "La sezione eccede le dimensioni massime";
-            case WRONG_PSW:             return s + "Password errata";
-            case WRONG_REQUEST:         return s + "Richiesta mal formattata";
-            case ALREADY_LOGGED:        return s + "Sei già loggato con un altro user";
-            case NOT_LOGGED:            return s + "Non sei ancora loggato! Effettua il logIn e ritenta";
-            case USER_UNKNOWN:          return s + "L'utente non è esiste";
-            case DOCUMENT_UNKNOWN:      return s + "Il documento non esiste";
-            case DUPLICATE_DOCUMENT:    return s + "Documento già presente";
-            case NOTIFICATION:          return s + "Notifica";
-            case USERNAME_EXISTS:       return s + "Username già occupato";
-            case MESSAGE_TOO_LONG:      return s + "Messaggio troppo lungo";
-            case NO_CHAT:               return s + "Non sei connesso ad alcuna chat";
+            case OK:                    return "\nOperazione eseguita con successo";
+            case FAIL:                  return "\nOperazione fallita";
+            case UNAUTHORIZED:          return "\nOperazione non autorizzata";
+            case SECTION_BUSY:          return "\nLa sezione è occupata";
+            case SECTION_SIZE_EXCEEDED: return "\nLa sezione eccede le dimensioni massime";
+            case WRONG_PSW:             return "\nPassword errata";
+            case WRONG_REQUEST:         return "\nRichiesta mal formattata";
+            case ALREADY_LOGGED:        return "\nSei già loggato con un altro user";
+            case NOT_LOGGED:            return "\nNon sei ancora loggato! Effettua il logIn e ritenta";
+            case USER_UNKNOWN:          return "\nL'utente non è esiste";
+            case DOCUMENT_UNKNOWN:      return "\nIl documento non esiste";
+            case DUPLICATE_DOCUMENT:    return "\nDocumento già presente";
+            case NOTIFICATION:          return "\nNotifica";
+            case USERNAME_EXISTS:       return "\nUsername già occupato";
+            case MESSAGE_TOO_LONG:      return "\nMessaggio troppo lungo";
+            case NO_CHAT:               return "\nNon sei connesso ad alcuna chat";
 
-            default:                    return s + "Operazione Ignota";
+            default:                    return "\nOperazione Ignota";
         }
     }
 }

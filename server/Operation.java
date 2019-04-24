@@ -15,7 +15,7 @@ public enum Operation {
     END_EDIT(4),
     SHOW_SECTION(5),
     SHOW_DOCUMENT(6),
-    CHAT(7), // ?? SERVE DAVVERO QUESTO TIPO DI OPERAIZONE ??? potremmo fornire l'indirizzo in caso di start edit..
+    CHAT(7),
     LIST(8),
     LOGOUT(9),
 

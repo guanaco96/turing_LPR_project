@@ -54,7 +54,7 @@ public class Server {
             RemoteTableInterface stub = (RemoteTableInterface) UnicastRemoteObject.exportObject(remoteTable,0);
             LocateRegistry.createRegistry(Config.portRegistryRMI);
             Registry registry = LocateRegistry.getRegistry(Config.portRegistryRMI);
-            registry.rebind("REGISTER-TURING",stub);
+            registry.rebind("REGISTER-TURING", stub);
         }
         catch (RemoteException e) {
             System.out.println("Errore nella creazione dell'oggetto remoto");

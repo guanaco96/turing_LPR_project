@@ -44,8 +44,6 @@ public class ChatListener implements Runnable {
             ms = new MulticastSocket(Config.portChat);
             ms.joinGroup(ia);
 
-            System.out.println("sono in ricezione su " + ia);
-
             byte[] buffer = new byte[dpSize];
             DatagramPacket dp = new DatagramPacket(buffer, dpSize);
 

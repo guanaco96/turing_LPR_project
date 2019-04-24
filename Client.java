@@ -181,7 +181,7 @@ public class Client {
         RemoteTableInterface stub;
         Remote remoteObject;
         try {
-            Registry registry = LocateRegistry.getRegistry(Config.portRegistryRMI);
+            Registry registry = LocateRegistry.getRegistry(serverName, Config.portRegistryRMI);
             remoteObject = registry.lookup("REGISTER-TURING");
             stub = (RemoteTableInterface) remoteObject;
             Operation op = stub.register(usr, psw);

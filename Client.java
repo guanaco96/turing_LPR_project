@@ -429,6 +429,7 @@ public class Client {
             System.out.println(Operation.FAIL);
             return;
         }
+
         chatListener = new ChatListener(chatAddress);
         listener = new Thread(chatListener);
         listener.start();
@@ -503,11 +504,17 @@ public class Client {
 
         DatagramPacket dp = new DatagramPacket( byteText, byteText.length,
                                                 chatAddress, Config.portChat);
+
+        // TODO ttl, sto mandando...., sono in ricezione su....
+
         try {
             MulticastSocket ms = new MulticastSocket();
-            ms.setTimeToLive(1);
+            ms.setTimeToLive(100);
             ms.send(dp);
             ms.close();
+
+            System.out.println("sto mandando un messaggio a " + chatAddress);
+
         }
         catch (IOException e) {
             System.out.println(Operation.FAIL);

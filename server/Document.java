@@ -130,7 +130,9 @@ public class Document {
      * @throws IOException se sollevata da FileChannel.write
      */
     private void bytesToSection(int section, ByteBuffer fileBuffer) throws IOException {
-        FileChannel channel = FileChannel.open(sectionPath[section], StandardOpenOption.TRUNCATE_EXISTING);
+        FileChannel channel = FileChannel.open( sectionPath[section],
+                                                StandardOpenOption.TRUNCATE_EXISTING,
+                                                StandardOpenOption.WRITE);
         while (fileBuffer.hasRemaining()) {
             channel.write(fileBuffer);
         }

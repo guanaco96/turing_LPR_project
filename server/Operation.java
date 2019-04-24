@@ -35,7 +35,8 @@ public enum Operation {
     DUPLICATE_DOCUMENT(21),
     SECTION_UNKNOWN(22),
     NOTIFICATION(23),
-    USERNAME_EXISTS(24);
+    USERNAME_EXISTS(24),
+    MESSAGE_TOO_LONG(25);
 
     int number;
     static private Operation[] array = new Operation[30];
@@ -85,7 +86,8 @@ public enum Operation {
             case DUPLICATE_DOCUMENT:    return s + "Documento già presente";
             case NOTIFICATION:          return s + "Notifica";
             case USERNAME_EXISTS:       return s + "Username già occupato";
-
+            case MESSAGE_TOO_LONG:      return s + "Messaggio troppo lungo";
+            
             default:                    return s + "Operazione Ignota";
         }
     }

@@ -13,7 +13,4 @@ public class Config {
     public static int portUDP = 40001;
     public static int portRegistryRMI = 40002;
     public static int portChat = 40003;
-
-    public static int base = 239 << 24;
-    public static int bound = 1 << 24;
 }

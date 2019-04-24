@@ -2,6 +2,8 @@ import remote.RemoteTableInterface;
 import server.Config;
 import server.Message;
 import server.Operation;
+import client.ChatListener;
+import client.Notifier;
 
 import java.io.*;
 import java.nio.*;
@@ -12,510 +14,639 @@ import java.rmi.registry.*;
 import java.net.*;
 import java.util.*;
 
-class Chatter implements Runnable {
-    private final int dpSize = 8192;
-    private InetAddress ia;
-    private MulticastSocket ms;
-
-    /**
-     *
-     *
-     */
-    Chatter(InetAddress inetAddress) {
-        ia = inetAddress;
-    }
-
-    /**
-     *
-     *
-     */
-    public void run() {
-        try {
-            ms = new MulticastSocket(Config.portChat);
-            ms.joinGroup(ia);
-
-            byte[] buffer = new byte[dpSize];
-            DatagramPacket dp = new DatagramPacket(buffer, dpSize);
-
-            ms.receive(dp);
-            while (!Thread.interrupted()) {
-                Client.pendingMessages.add(new String(dp.getData()));
-                ms.receive(dp);
-            }
-        }
-        catch (IOException e) {
-            System.out.println("\nErrore nella chat multicast\n");
-        }
-    }
-
-
-}
 
 public class Client {
 
-    static String loggedName;
-    static DatagramSocket dgSocket;
-    static Vector<String> pendingMessages;
+    static String loggedUser;
+    static ChatListener chatListener;
+    static Notifier notifier;
     static Thread listener;
-
-    static void saveSection(String docName, int num, byte[] data) {
-        try {
-            Path path = Paths.get(loggedName, docName);
-            Files.createDirectories(path);
-            path = path.resolve("section_" + num);
-            // ?? Files.deleteIfExists(path);
-            // ?? Files.createFile(path);
-            FileChannel channel = FileChannel.open(path, StandardOpenOption.TRUNCATE_EXISTING,
-                                                         StandardOpenOption.CREATE_NEW);
-            ByteBuffer section = ByteBuffer.wrap(data);
-            while (section.hasRemaining()) {
-                channel.write(section);
-            }
-        }
-        catch (Exception e) {}
-    }
+    static Thread notifierThread;
+    static InetAddress chatAddress;
+    static SocketChannel socket;
 
 
-    static void wrongCommand() {
-        System.out.printf(
-        "\nWrong command! Type \"help\" to list all available commands\n\n"
-        );
-    }
-
-    static void printHelpMessage() {
-        System.out.printf(
-        "\nusage: COMMAND [ARGS...]\n\n" +
-        "COMMANDS:\n\n    " +
-            "register <username> <password>  registra l’utente\n    " +
-            "login <username> <password>     effettua il login\n    " +
-            "logout                          effettua il logout\n    " +
-            "create <doc> <numsezioni>       crea un documento\n    " +
-            "share <doc> <username>          condivide il documento\n    " +
-            "show <doc> <sec>                mostra una sezione del documento\n    " +
-            "show <doc>                      mostra l’intero documento\n    " +
-            "list                            mostra la lista dei documenti\n    " +
-            "edit <doc> <sec>                modifica una sezione del documento\n    " +
-            "end-edit <doc> <sec>            fine modifica della sezione del doc\n    " +
-            "send <msg>                      invia un msg in chat\n    " +
-            "receive                         visualizza i msg ricevuti sulla chat\n\n"
-        );
-    }
 
     public static void main(String[] args) {
         try {
-            SocketChannel socket = null;
-            try {
-                socket = SocketChannel.open();
-                InetAddress localAddress = InetAddress.getByName(null);
-                socket.connect(new InetSocketAddress(localAddress, Config.portTCP));
-                dgSocket = new DatagramSocket(Config.portChat);
-                dgSocket.setReuseAddress(true);
+            socket = SocketChannel.open();
+            InetAddress localAddress = InetAddress.getByName(null);
+            socket.connect(new InetSocketAddress(localAddress, Config.portTCP));
+        }
+        catch (IOException exc) {
+            System.out.println("\nImpossibile connettersi al server\n");
+            System.exit(-1);
+        }
+        // TODO
+        int simu = (args.length > 0) ? 0 : 100;
+
+        while (!Thread.interrupted()) {
+
+            Vector<String> token = new Vector<>();
+
+            if (simu < 6 && args[0].equals("vale")) {
+                if (simu == 5) {
+                    try {System.in.read();} catch (Exception e){}
+                    System.out.printf("[receive]: ");
+                    token = new Vector<>();
+                    token.add("receive");
+                    simu++;
+                }
+                if (simu == 4) {
+                    System.out.printf("[edit]: ");
+                    token = new Vector<>();
+                    token.add("edit");
+                    token.add("contra");
+                    token.add("1");
+                    simu++;
+                }
+                if (simu == 3) {
+                    System.out.printf("[share]: ");
+                    token = new Vector<>();
+                    token.add("share");
+                    token.add("contra");
+                    token.add("jaco");
+                    simu++;
+                }
+                if (simu == 2) {
+                    System.out.printf("[create]: ");
+                    token = new Vector<>();
+                    token.add("create");
+                    token.add("contra");
+                    token.add("5");
+                    simu++;
+                }
+                if (simu == 1) {
+                    System.out.printf("[login]: ");
+                    token = new Vector<>();
+                    token.add("login");
+                    token.add("vale");
+                    token.add("daje");
+                    simu++;
+                }
+                if (simu == 0) {
+                    System.out.printf("[resgister]: ");
+                    token = new Vector<>();
+                    token.add("register");
+                    token.add("vale");
+                    token.add("daje");
+                    simu++;
+                }
             }
-            catch (IOException exc) {
-                System.out.println("\nImpossibile connettersi al server\n");
-                System.exit(-1);
+            else if (simu < 5 && args[0].equals("jaco")) {
+                if (simu == 4) {
+                    System.out.printf("[send]: ");
+                    token = new Vector<>();
+                    token.add("send");
+                    token.add("ciao");
+                    token.add("vale!");
+                    simu++;
+                }
+                if (simu == 3) {
+                    try {System.in.read();} catch (Exception e){}
+                    System.out.printf("[edit]: ");
+                    token = new Vector<>();
+                    token.add("edit");
+                    token.add("contra");
+                    token.add("2");
+                    simu++;
+                }
+                if (simu == 2) {
+                    System.out.printf("[create]: ");
+                    token = new Vector<>();
+                    token.add("create");
+                    token.add("nietzsche");
+                    token.add("7");
+                    simu++;
+                }
+                if (simu == 1) {
+                    System.out.printf("[login]: ");
+                    token = new Vector<>();
+                    token.add("login");
+                    token.add("jaco");
+                    token.add("mela");
+                    simu++;
+                }
+                if (simu == 0) {
+                    System.out.printf("[register]: ");
+                    token = new Vector<>();
+                    token.add("register");
+                    token.add("jaco");
+                    token.add("mela");
+                    simu++;
+                }
             }
-            // TODO
-            int simu = (args.length > 0) ? 0 : 100;
+            else {
 
-            while (!Thread.interrupted()) {
-
-                Vector<String> token = new Vector<>();
-                // TODO
-                if (simu < 4 && args[0].equals("vale")) {
-                    if (simu == 3) {
-                    //    System.in.read();
-                        System.out.printf("[share]: ");
-                        token = new Vector<>();
-                        token.add("share");
-                        token.add("contra");
-                        token.add("jaco");
-                        simu++;
-                    }
-                    if (simu == 2) {
-                        System.out.printf("[create]: ");
-                        token = new Vector<>();
-                        token.add("create");
-                        token.add("contra");
-                        token.add("5");
-                        simu++;
-                    }
-                    if (simu == 1) {
-                        System.out.printf("[login]: ");
-                        token = new Vector<>();
-                        token.add("login");
-                        token.add("vale");
-                        token.add("daje");
-                        simu++;
-                    }
-                    if (simu == 0) {
-                        System.out.printf("[resgister]: ");
-                        token = new Vector<>();
-                        token.add("register");
-                        token.add("vale");
-                        token.add("daje");
-                        simu++;
-                    }
+                System.out.printf("\n[turing] >> ");
+                Scanner scanner = new Scanner(System.in);
+                String line = scanner.nextLine();
+                StringTokenizer tokenizer = new StringTokenizer(line);
+                while (tokenizer.hasMoreTokens()) {
+                    token.add(tokenizer.nextToken());
                 }
-                else if (simu < 3 && args[0].equals("jaco")) {
-                    /*if (simu == 4) {
-                        System.out.printf("[show-document]: ");
-                        token = new Vector<>();
-                        token.add("show");
-                        token.add("contra");
-                        simu++;
-                    }
-                    if (simu == 3) {
-                        System.in.read();
-                        System.out.printf("[show-section]: ");
-                        token = new Vector<>();
-                        token.add("show");
-                        token.add("contra");
-                        token.add("1");
-                        simu++;
-                    }*/
-                    if (simu == 2) {
-                        System.out.printf("[create]: ");
-                        token = new Vector<>();
-                        token.add("create");
-                        token.add("nietzsche");
-                        token.add("7");
-                        simu++;
-                    }
-                    if (simu == 1) {
-                        System.out.printf("[login]: ");
-                        token = new Vector<>();
-                        token.add("login");
-                        token.add("jaco");
-                        token.add("mela");
-                        simu++;
-                    }
-                    if (simu == 0) {
-                        System.out.printf("[register]: ");
-                        token = new Vector<>();
-                        token.add("register");
-                        token.add("jaco");
-                        token.add("mela");
-                        simu++;
-                    }
-                }
-                else {
+            }
 
-                    System.out.printf("[turing] >> ");
-                    Scanner scanner = new Scanner(System.in);
-                    String line = scanner.nextLine();
-                    StringTokenizer tokenizer = new StringTokenizer(line);
-                    while (tokenizer.hasMoreTokens()) {
-                        token.add(tokenizer.nextToken());
-                    }
-                }
-
-                ByteBuffer a1 = null, a2 = null, a3 = null;
-
-                switch (token.get(0)) {
-                    case "help":
-                        printHelpMessage();
-                        break;
-
-                    case "register":
-                        if (token.size() != 3) {
-                            wrongCommand();
-                            break;
-                        }
-                        RemoteTableInterface stub;
-                        Remote remoteObject;
-                        Registry registry = LocateRegistry.getRegistry(Config.portRegistryRMI);
-                        remoteObject = registry.lookup("REGISTER-TURING");
-                        stub = (RemoteTableInterface) remoteObject;
-                        Operation regOp = stub.register(token.get(1), token.get(2));
-                        System.out.println(regOp);
-                        break;
-
-                    case "login":
-                        if (token.size() != 3) {
-                            wrongCommand();
-                            break;
-                        }
-                        String usr = token.get(1);
-                        String psw = token.get(2);
-                        a1 = ByteBuffer.wrap(usr.getBytes());
-                        a2 = ByteBuffer.wrap(psw.getBytes());
-                        a3 = ByteBuffer.allocate(4);
-                        // TODO serve davvero mandargli questo dato che si trova nel file di configurazione???
-                        a3.putInt(Config.portUDP);
-                        a3.flip();
-
-                        Message request = new Message(Operation.LOGIN, a1, a2, a3);
-                        request.write(socket);
-                        Message reply = Message.read(socket);
-                        System.out.println(reply.getOp());
-                        loggedName = usr;
-                        break;
-
-                    case "logout":
-                        if (token.size() != 1) {
-                            wrongCommand();
-                            break;
-                        }
-                        request = new Message(Operation.LOGOUT);
-                        reply = Message.read(socket);
-                        System.out.println(reply.getOp());
-                        loggedName = null;
-                        break;
-
-                    case "create":
-                        if (token.size() != 3) {
-                            wrongCommand();
-                            break;
-                        }
-                        String documentName = token.get(1);
-                        int n = Integer.parseInt(token.get(2));
-                        a1 = ByteBuffer.wrap(documentName.getBytes());
-                        a2 = ByteBuffer.allocate(4);
-                        a2.putInt(n);
-                        a2.flip();
-
-                        request = new Message(Operation.CREATE, a1, a2);
-                        request.write(socket);
-                        reply = Message.read(socket);
-                        System.out.println(reply.getOp());
-                        break;
-
-                    case "share":
-                        if (token.size() != 3) {
-                            wrongCommand();
-                            break;
-                        }
-                        documentName = token.get(1);
-                        String guest = token.get(2);
-                        a1 = ByteBuffer.wrap(documentName.getBytes());
-                        a2 = ByteBuffer.wrap(guest.getBytes());
-
-                        request = new Message(Operation.INVITE, a1, a2);
-                        request.write(socket);
-                        reply = Message.read(socket);
-                        System.out.println(reply.getOp());
-                        break;
-
-                    case "show":
-                    if (token.size() != 2 && token.size() != 3) {
-                        wrongCommand();
-                        break;
-                    }
-                    //----------- SHOW SECTION -----------
-                    if (token.size() == 3) {
-                            documentName = token.get(1);
-                            n = Integer.parseInt(token.get(2));
-                            a1 = ByteBuffer.wrap(documentName.getBytes());
-                            a2 = ByteBuffer.allocate(4);
-                            a2.putInt(n);
-                            a2.flip();
-
-                            request = new Message(Operation.SHOW_SECTION, a1, a2);
-                            request.write(socket);
-                            reply = Message.read(socket);
-                            if (reply.getOp() != Operation.OK) {
-                                System.out.println(reply.getOp());
-                                break;
-                            }
-                            Vector<byte[]> chunks = reply.segment();
-                            int isBusy = ByteBuffer.wrap(chunks.get(0)).getInt();
-                            ByteBuffer section = ByteBuffer.wrap(chunks.get(1));
-                            try {
-                                Path path = Paths.get(loggedName, documentName);
-                                try {
-                                    Files.createDirectories(path);
-                                    path = path.resolve("section_" + n);
-                                    Files.deleteIfExists(path);
-                                    Files.createFile(path);
-                                }
-                                catch (IOException exc) {}
-                                FileChannel channel = FileChannel.open(path, StandardOpenOption.TRUNCATE_EXISTING);
-                                while (section.hasRemaining()) {
-                                    channel.write(section);
-                                }
-
-                                System.out.printf("\t  La sezione " + n + " di " + documentName + " è ");
-                                if (isBusy > 0) System.out.println("occupata");
-                                else System.out.println("libera");
-                            }
-                            catch (IOException e) {
-                                System.out.println(Operation.FAIL);
-                            }
-                            break;
-                        }
-                        //---------------------------------------
-                        //---------- SHOW DOCUMENT --------------
-                        if (token.size() == 2) {
-                            documentName = token.get(1);
-                            a1 = ByteBuffer.wrap(documentName.getBytes());
-
-                            request = new Message(Operation.SHOW_DOCUMENT, a1);
-                            request.write(socket);
-                            reply = Message.read(socket);
-                            if (reply.getOp() != Operation.OK) {
-                                System.out.println(reply.getOp());
-                                break;
-                            }
-                            Vector<byte[]> chunks = reply.segment();
-                            try {
-                                Path path = Paths.get(loggedName, documentName);
-                                Files.createDirectories(path);
-                                ByteBuffer busySections = ByteBuffer.wrap(chunks.get(0));
-                                System.out.println("\nStato del documento:\n");
-                                for (int i = 1; i < chunks.size(); i++) {
-                                    System.out.printf("La sezione " + i + " di " + documentName + " è ");
-                                    if (busySections.getInt() > 0) {
-                                        System.out.println("occupata");
-                                    }
-                                    else {
-                                        System.out.println("libera");
-                                        Path tmpPath = path.resolve("section_" + i);
-                                        Files.deleteIfExists(tmpPath);
-                                        Files.createFile(tmpPath);
-                                        ByteBuffer section = ByteBuffer.wrap(chunks.get(i));
-                                        FileChannel channel = FileChannel.open(tmpPath, StandardOpenOption.TRUNCATE_EXISTING);
-                                        while (section.hasRemaining()) {
-                                            channel.write(section);
-                                        }
-                                    }
-                                }
-
-                            }
-                            catch (IOException e) {
-                                e.printStackTrace();
-                                System.out.println(Operation.FAIL);
-                            }
-                            break;
-                        }
-
-                    case "list":
-                    if (token.size() != 1) {
-                        wrongCommand();
-                        break;
-                    }
-                    request = new Message(Operation.LIST);
-                    request.write(socket);
-                    reply = Message.read(socket);
-                    if (reply.getOp() != Operation.OK) {
-                        System.out.println(reply.getOp());
-                        break;
-                    }
-
-                    Vector<byte[]> chunks = reply.segment();
-                    System.out.println("\nLista dei documenti che puoi editare:\n");
-                    for (byte[] bb : chunks) {
-                        String docName = new String(bb);
-                        System.out.println(docName);
-                    }
+            if (token.isEmpty()) {
+                wrongCommand();
+                continue;
+            }
+            switch (token.get(0)) {
+                case "help":
+                    printHelpMessage();
                     break;
 
-                case "edit":
-                    if (token.size() != 3) {
-                        wrongCommand();
-                        break;
+                case "register":
+                    if (token.size() == 3) {
+                        String usr = token.get(1);
+                        String psw = token.get(2);
+                        register(usr, psw);
                     }
-                    documentName = token.get(1);
-                    n = Integer.parseInt(token.get(2));
-                    a1 = ByteBuffer.wrap(documentName.getBytes());
-                    a2 = ByteBuffer.allocate(4);
-                    a2.putInt(n);
-                    a2.flip();
+                    else wrongCommand();
+                    break;
 
-                    request = new Message(Operation.START_EDIT, a1, a2);
-                    request.write(socket);
-                    reply = Message.read(socket);
-                    chunks = reply.segment();
+                case "login":
+                    if (token.size() == 3) {
+                        String usr = token.get(1);
+                        String psw = token.get(2);
+                        login(usr, psw);
+                    }
+                    else wrongCommand();
+                    break;
 
-                    saveSection(documentName, n, chunks.get(0));
+                case "logout":
+                    if (token.size() == 1) logout();
+                    else wrongCommand();
+                    break;
 
-                    InetAddress ia = InetAddress.getByName(new String(chunks.get(1)));
-                    listener = new Thread(new Chatter(ia));
-                    dgSocket.connect(new InetSocketAddress(ia, Config.portChat));
+                case "create":
+                    if (token.size() == 3) {
+                        String docName = token.get(1);
+                        int secNum = Integer.parseInt(token.get(2));
+                        create(docName, secNum);
+                    }
+                    else wrongCommand();
+                    break;
 
-                    System.out.println(reply.getOp());
+                case "share":
+                    if (token.size() == 3) {
+                        String docName = token.get(1);
+                        String guest = token.get(2);
+                        share(docName, guest);
+                    }
+                    else wrongCommand();
+                    break;
+
+                case "show":
+                    if (token.size() == 3) {
+                        String docName = token.get(1);
+                        int numSec = Integer.parseInt(token.get(2));
+                        showSection(docName, numSec);
+                    }
+                    else if (token.size() == 2) {
+                        String docName = token.get(1);
+                        showDocument(docName);
+                    }
+                    else wrongCommand();
+                    break;
+
+                case "list":
+                if (token.size() == 1) list();
+                else wrongCommand();
+                break;
+
+                case "edit":
+                    if (token.size() == 3) {
+                        String docName = token.get(1);
+                        int numSec = Integer.parseInt(token.get(2));
+                        edit(docName, numSec);
+                    }
+                    else wrongCommand();
                     break;
 
                 case "end-edit":
-                    if (token.size() != 3) {
-                        wrongCommand();
-                        break;
+                    if (token.size() == 3) {
+                        String docName = token.get(1);
+                        int numSec = Integer.parseInt(token.get(2));
+                        endEdit(docName, numSec);
                     }
-                    documentName = token.get(1);
-                    n = Integer.parseInt(token.get(2));
-                    a1 = ByteBuffer.wrap(documentName.getBytes());
-                    a2 = ByteBuffer.allocate(4);
-                    a2.putInt(n);
-                    a2.flip();
-                    Path path = Paths.get(loggedName, documentName, "section_" + n);
-                    try {
-                        FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
-                        int size = (int) channel.size();
-                        a3 = ByteBuffer.allocate(size);
-                        while (size > 0) {
-                            int tmp = channel.read(a3);
-                            if (tmp < 0) {
-                                System.out.println(Operation.FAIL);
-                                break;
-                            }
-                            size -= tmp;
-                        }
-                        a3.flip();
-                    }
-                    catch (IOException e) {}
-                    request = new Message(Operation.END_EDIT, a1, a2, a3);
-                    request.write(socket);
-                    reply = Message.read(socket);
-
-                    ia = null;
-                    listener.interrupt();
-
-                    System.out.println(reply.getOp());
+                    else wrongCommand();
                     break;
 
                 case "send":
-                    if (token.size() < 2) {
-                        wrongCommand();
-                        break;
+                    if (token.size() >= 2) {
+                        String text = "[" + loggedUser + "]: ";
+                        text = text.concat(token.get(1));
+                        for (int i = 2; i < token.size(); i++) {
+                            text = text.concat(" " + token.get(i));
+                        }
+                        send(text);
                     }
-                    String text = "[" + loggedName + "]: ";
-                    text.concat(token.get(1));
-                    for (int i = 2; i < token.size(); i++) {
-                        text.concat(" " + token.get(i));
-                    }
-                    byte[] byteMsg = text.getBytes();
-                    if (byteMsg.length > 8192) {
-                        System.out.println("Messaggio troppo lungo");
-                        break;
-                    }
-                    DatagramPacket dp = new DatagramPacket(byteMsg, byteMsg.length);
-                    dgSocket.send(dp);
+                    else wrongCommand();
                     break;
 
                 case "receive":
-                    if (token.size() != 1) {
-                        wrongCommand();
-                        break;
-                    }
-                    System.out.println("Messaggi ricevuti:\n");
-                    for (String s : pendingMessages) {
-                        System.out.println(s + "\n");
-                    }
-                    pendingMessages.removeAllElements();
+                    if (token.size() == 1) chatListener.printMsgs();
+                    else wrongCommand();
                     break;
 
                 default:
-                        wrongCommand();
-                }
+                    wrongCommand();
             }
         }
-        catch (Exception e) {
-            System.out.println("\nErrore nel server\n");
-            e.printStackTrace();
-        }
-
 
     }
+
+
+/**
+*
+*
+*/
+static void register(String usr, String psw) {
+    RemoteTableInterface stub;
+    Remote remoteObject;
+    try {
+        Registry registry = LocateRegistry.getRegistry(Config.portRegistryRMI);
+        remoteObject = registry.lookup("REGISTER-TURING");
+        stub = (RemoteTableInterface) remoteObject;
+        Operation op = stub.register(usr, psw);
+        System.out.println(op);
+    }
+    catch (NotBoundException | RemoteException e) {
+        System.out.println(Operation.FAIL);
+    }
+}
+
+/**
+*
+*
+*/
+static void login(String usr, String psw) {
+    ByteBuffer a1 = ByteBuffer.wrap(usr.getBytes());
+    ByteBuffer a2 = ByteBuffer.wrap(psw.getBytes());
+    ByteBuffer a3 = ByteBuffer.allocate(4);
+
+    notifier = new Notifier();
+    notifierThread = new Thread(notifier);
+    notifierThread.start();
+    a3.putInt(notifier.getPort());
+    a3.flip();
+
+    Message request = new Message(Operation.LOGIN, a1, a2, a3);
+    try {
+        request.write(socket);
+        Message reply = Message.read(socket);
+        if (reply.getOp() == Operation.OK) loggedUser = usr;
+        System.out.println(reply.getOp());
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+    }
+}
+
+/**
+*
+*
+*/
+static void logout() {
+    Message request = new Message(Operation.LOGOUT);
+    Message reply = null;
+    try {
+        request.write(socket);
+        reply = Message.read(socket);
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+
+    if (reply.getOp() == Operation.OK) {
+        loggedUser = null;
+        notifierThread.interrupt();
+    }
+    System.out.println(reply.getOp());
+}
+
+/**
+*
+*
+*/
+static void create(String docName, int numSec) {
+    ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
+    ByteBuffer a2 = ByteBuffer.allocate(4);
+    a2.putInt(numSec);
+    a2.flip();
+
+    Message request = new Message(Operation.CREATE, a1, a2);
+    try {
+        request.write(socket);
+        Message reply = Message.read(socket);
+        System.out.println(reply.getOp());
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+    }
+}
+
+/**
+*
+*
+*/
+static void share(String docName, String guest) {
+    ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
+    ByteBuffer a2 = ByteBuffer.wrap(guest.getBytes());
+
+    Message request = new Message(Operation.INVITE, a1, a2);
+    try {
+        request.write(socket);
+        Message reply = Message.read(socket);
+        System.out.println(reply.getOp());
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+    }
+}
+
+/**
+*
+*
+*/
+static void showSection(String docName, int numSec) {
+    ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
+    ByteBuffer a2 = ByteBuffer.allocate(4);
+    a2.putInt(numSec);
+    a2.flip();
+
+    Message request = new Message(Operation.SHOW_SECTION, a1, a2);
+    Message reply = null;
+    try {
+        request.write(socket);
+        reply = Message.read(socket);
+    } catch (IOException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+    if (reply.getOp() != Operation.OK) {
+        System.out.println(reply.getOp());
+        return;
+    }
+
+    Vector<byte[]> chunk = reply.segment();
+    int isBusy = ByteBuffer.wrap(chunk.get(0)).getInt();
+    byte[] data = chunk.get(1);
+    System.out.printf("\t  La sezione " + numSec + " di " + docName + " è ");
+    if (isBusy != 0) {
+        System.out.println("occupata");
+    }
+    else {
+        System.out.println("libera");
+        try { saveSection(docName, numSec, data);}
+        catch (IOException e) {
+            System.out.println("Errore nel download della sezione " +
+                                numSec + " di " + docName);
+        }
+    }
+}
+
+/**
+*
+*
+*/
+static void showDocument(String docName) {
+    ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
+    Message request = new Message(Operation.SHOW_DOCUMENT, a1);
+    Message reply = null;
+    try {
+        request.write(socket);
+        reply = Message.read(socket);
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+    if (reply.getOp() != Operation.OK) {
+        System.out.println(reply.getOp());
+        return;
+    }
+
+    Vector<byte[]> chunk = reply.segment();
+    ByteBuffer busySections = ByteBuffer.wrap(chunk.get(0));
+    System.out.println("\nStato del documento:\n");
+    for (int i = 1; i < chunk.size(); i++) {
+        System.out.printf("La sezione " + i + " di " + docName + " è ");
+        if (busySections.getInt() > 0) {
+            System.out.println("occupata");
+        }
+        else {
+            System.out.println("libera");
+            try { saveSection(docName, i, chunk.get(i));}
+            catch (IOException e) {
+                System.out.println("Errore nel download della sezione " +
+                                    i + " di " + docName);
+            }
+        }
+    }
+}
+
+/**
+*
+*
+*/
+static void list() {
+    Message request = new Message(Operation.LIST);
+    Message reply = null;
+    try {
+        request.write(socket);
+        reply = Message.read(socket);
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+    if (reply.getOp() != Operation.OK) {
+        System.out.println(reply.getOp());
+        return;
+    }
+
+    Vector<byte[]> chunk = reply.segment();
+    System.out.println("\nLista dei documenti che puoi editare:\n");
+    for (byte[] byteName : chunk) {
+        String docName = new String(byteName);
+        System.out.println(docName);
+    }
+}
+
+/**
+*
+*
+*/
+static void edit(String docName, int numSec) {
+    ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
+    ByteBuffer a2 = ByteBuffer.allocate(4);
+    a2.putInt(numSec);
+    a2.flip();
+
+    Message request = new Message(Operation.START_EDIT, a1, a2);
+    Message reply = null;
+    try {
+        request.write(socket);
+        reply = Message.read(socket);
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+
+    Vector<byte[]> chunk = reply.segment();
+    try { saveSection(docName, numSec, chunk.get(0));}
+    catch (IOException e) {
+        System.out.println("Errore nel download della sezione " +
+                            numSec + " di " + docName);
+    }
+
+    String strAddr = new String(chunk.get(1));
+    try { chatAddress = InetAddress.getByName(strAddr);}
+    catch (java.net.UnknownHostException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+    chatListener = new ChatListener(chatAddress);
+    listener = new Thread(chatListener);
+    listener.start();
+
+    System.out.println(reply.getOp());
+}
+
+/**
+*
+*
+*/
+static void endEdit(String docName, int numSec) {
+    ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
+    ByteBuffer a2 = ByteBuffer.allocate(4);
+    ByteBuffer a3 = null;
+    a2.putInt(numSec);
+    a2.flip();
+
+    Path path = Paths.get(loggedUser, docName, "section_" + numSec);
+    try {
+        FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
+        int size = (int) channel.size();
+        a3 = ByteBuffer.allocate(size);
+        while (size > 0) {
+            int tmp = channel.read(a3);
+            if (tmp < 0) {
+                System.out.println(Operation.FAIL);
+                return;
+            }
+            size -= tmp;
+        }
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+    a3.flip();
+
+
+    Message request = new Message(Operation.END_EDIT, a1, a2, a3);
+    Message reply = null;
+    try {
+        request.write(socket);
+        reply = Message.read(socket);
+    } catch (IOException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+    chatAddress = null;
+    listener.interrupt();
+    System.out.println(reply.getOp());
+}
+
+/**
+*
+*
+*/
+static void send(String text) {
+    byte[] byteText = text.getBytes();
+    if (byteText.length > 8192) {
+        System.out.println(Operation.MESSAGE_TOO_LONG);
+        return;
+    }
+
+    DatagramPacket dp = new DatagramPacket( byteText, byteText.length,
+                                            chatAddress, Config.portChat);
+    try {
+        MulticastSocket ms = new MulticastSocket();
+        ms.setTimeToLive(1);
+        ms.send(dp);
+        ms.close();
+    }
+    catch (IOException e) {
+        System.out.println(Operation.FAIL);
+        return;
+    }
+    System.out.println(Operation.OK);
+}
+
+/**
+*
+*
+*/
+
+
+/**
+*
+*
+*/
+static void saveSection(String docName, int num, byte[] data) throws IOException {
+    Path path = Paths.get(loggedUser, docName);
+    Files.createDirectories(path);
+    path = path.resolve("section_" + num);
+
+    Files.deleteIfExists(path);
+    FileChannel channel = FileChannel.open( path, StandardOpenOption.CREATE_NEW,
+                                                    StandardOpenOption.WRITE);
+    ByteBuffer section = ByteBuffer.wrap(data);
+    while (section.hasRemaining()) {
+        channel.write(section);
+    }
+
+}
+
+
+/**
+*
+*
+*/
+static void wrongCommand() {
+    System.out.printf(
+    "\nComando sbagliato! Digita \"help\" per la lista dei comandi disponibili\n\n"
+    );
+}
+
+/**
+*
+*
+*/
+static void printHelpMessage() {
+    System.out.printf(
+    "\nusage: COMMAND [ARGS...]\n\n" +
+    "COMMANDS:\n\n    " +
+    "register <username> <password>  registra l’utente\n    " +
+    "login <username> <password>     effettua il login\n    " +
+    "logout                          effettua il logout\n    " +
+    "create <doc> <numsezioni>       crea un documento\n    " +
+    "share <doc> <username>          condivide il documento\n    " +
+    "show <doc> <sec>                mostra una sezione del documento\n    " +
+    "show <doc>                      mostra l’intero documento\n    " +
+    "list                            mostra la lista dei documenti\n    " +
+    "edit <doc> <sec>                modifica una sezione del documento\n    " +
+    "end-edit <doc> <sec>            fine modifica della sezione del doc\n    " +
+    "send <msg>                      invia un msg in chat\n    " +
+    "receive                         visualizza i msg ricevuti sulla chat\n\n"
+    );
+}
 
 }
 
@@ -525,6 +656,14 @@ public class Client {
 // formattare output console
 // vedere se la gestione delle operazioni / eccezioni è ridondante
 // refactoring gestione delle eccezioni
+// provare tutti i comandi con argomenti sbagliati
+// TUTTE LE COMBINAZIOI DI NUMERI E CARATTERI PER I putInt
+// provare tutte le combinazioni di disconnessioni buffe
+// provare che i files vengano effettivamente modificati
+// fare la prove su computer diversi immettendo come argomento del client l' IP del server
+// creare client.Config e tutto un pacchetto per il client.
+// eliminare la Config.portUDP (??)
+// FARE UN CHECK DI COSA HO DEFINITO ED ORA E' INUTILE (tipo le operazioni inutili...)
 
 // documentare e commentare
 // scrivere relazione

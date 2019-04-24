@@ -12,19 +12,15 @@ public class ChatHandler {
 
     private HashSet<String> addressSet;
     private int port;
-    private int base;
-    private int bound;
     private Random random;
+    private int numberOfAddresses = 1000000;
 
     /**
      *
      *
      */
-    public ChatHandler(int bs, int bnd, int prt) {
+    public ChatHandler(int prt) {
         addressSet = new HashSet<>();
-        base = bs;
-        bound = bnd;
-        port = prt;
         random = new Random();
     }
 
@@ -33,10 +29,10 @@ public class ChatHandler {
      *
      */
      public synchronized String generateAddress() throws IOException {
-        if (addressSet.size() == bound) throw new IOException();
+        if (addressSet.size() == numberOfAddresses) throw new IOException();
         while (true) {
-            int n = base + random.nextInt(bound);
-            int q1 = n >> 24;
+            int n = random.nextInt(numberOfAddresses) + 1;
+            int q1 = 239;
             int q2 = (n >> 16) & 255;
             int q3 = (n >> 8) & 255;
             int q4 = n & 255;

@@ -59,13 +59,7 @@ public class TaskExecutor implements Runnable {
         Vector<byte[]> chunks = request.segment();
         User user = socketMap.get(socketChannel);
 
-        // TODO
-        // System.out.println("request.getOp() = " + request.getOp() + "\nuser = " + user);
-
         if (request.getOp() != Operation.LOGIN && user == null) return new Message(Operation.NOT_LOGGED);
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-        if (chatHandler == null) System.out.println("chatHandler == null");
 
         switch (request.getOp()) {
 
@@ -164,6 +158,7 @@ public class TaskExecutor implements Runnable {
                 Operation reply = user.endEdit();
                 if (reply != Operation.OK) return new Message(reply);
                 reply = document.endEdit(user, section, fileBuffer);
+                if (reply != Operation.OK) user.startEdit(document);
                 return new Message(reply);
             }
             case LOGOUT: {

@@ -13,7 +13,7 @@ import java.net.*;
 
 /**
  * Classe che implementa Runnable, qui è dichiarato il mai dei thread worker che
- * eseguiranno le richieste dei clients. 
+ * eseguiranno le richieste dei clients.
  *
  * @author Lorenzo Beretta, Matricola: 536242
  */

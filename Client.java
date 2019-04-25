@@ -1,7 +1,7 @@
-import remote.RemoteTableInterface;
-import server.Config;
-import server.Message;
-import server.Operation;
+import common.RemoteTableInterface;
+import common.Config;
+import common.Message;
+import common.Operation;
 import client.ChatListener;
 import client.Notifier;
 
@@ -15,7 +15,13 @@ import java.net.*;
 import java.util.*;
 
 
-public class Client {
+/**
+ * Classe contenente il main del client.
+ * Data la semplicità della CLI essa è implementata nel main stesso.
+ *
+ * @author Lorenzo Beretta, Matricola: 536242
+ */
+ public class Client {
 
     static String loggedUser;
     static ChatListener chatListener;
@@ -26,8 +32,13 @@ public class Client {
     static SocketChannel socket;
     static String serverName;
 
-
-
+    /**
+     * Main del client: prende come argomento l'indirizzo del Server se è remoto.
+     * Stampa il prompt, tokenizza l'imput, in base al [COMMAND] inserito chiama
+     * l'opportuno metodo statico o stampa un messaggio di errore se il comando
+     * è mal formattato.
+     * @param args se args[0] è presente questo è l'indirizzo del server remoto
+     */
     public static void main(String[] args) {
         serverName = (args.length > 0) ? args[0] : null;
         connectSocket();
@@ -108,9 +119,9 @@ public class Client {
                     break;
 
                 case "list":
-                if (token.size() == 1) list();
-                else wrongCommand();
-                break;
+                    if (token.size() == 1) list();
+                    else wrongCommand();
+                    break;
 
                 case "edit":
                     if (token.size() == 3) {
@@ -157,9 +168,10 @@ public class Client {
             }
         }
     }
+
     /**
-    *
-    *
+    * Metodo per connettere il proprio SocketChannel a quello
+    * del server.
     */
     static void connectSocket() {
         try {
@@ -174,8 +186,9 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo che registra l'user utilizzando la RMI sullo stub
+    * @param usr username del registrando
+    * @param psw la password del registrando
     */
     static void register(String usr, String psw) {
         RemoteTableInterface stub;
@@ -193,8 +206,9 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo che effettua il login di un utente già registrato
+    * @param usr username
+    * @param psw password
     */
     static void login(String usr, String psw) {
         ByteBuffer a1 = ByteBuffer.wrap(usr.getBytes());
@@ -220,9 +234,8 @@ public class Client {
     }
 
     /**
-    *
-    *
-    */
+     * Metodo per effettuare il logout.
+     */
     static void logout() {
         Message request = new Message(Operation.LOGOUT);
         Message reply = null;
@@ -245,8 +258,9 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * metodo per creare un documento
+    * @param docName nome del documento da creare
+    * @param numSec numero delle sezioni del documento creato
     */
     static void create(String docName, int numSec) {
         ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
@@ -266,8 +280,9 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo per invitare un utente ad editare il documento
+    * @param docName nome del documento che si invita ad editare
+    * @param guest nome dell'utente invitato
     */
     static void share(String docName, String guest) {
         ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
@@ -285,8 +300,9 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo per scaricare una sezione e stampare il suo stato
+    * @param docName nome del documento da cui estrarre la sezione
+    * @param numSec numero della sezione
     */
     static void showSection(String docName, int numSec) {
         ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
@@ -326,8 +342,8 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo per scaricare un documento e stampare lo stato delle sue sezioni
+    * @param docName nome del documento
     */
     static void showDocument(String docName) {
         ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
@@ -365,8 +381,7 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo per stampare la lista dei document che si ha diritto ad editare
     */
     static void list() {
         Message request = new Message(Operation.LIST);
@@ -393,8 +408,9 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo per scaricare un documento ed iniziare l'editing di una sua sezine, acquisendone l'esclusiva.
+    * @param docName nome del documento
+    * @param numSec numero della sezione di cui acquisire l'editing
     */
     static void edit(String docName, int numSec) {
         ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
@@ -438,8 +454,9 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo per terminare l'editing della sezione di un documento, effettuandone l'upload
+    * @param docName nome del documento
+    * @param numSec numero della sezione
     */
     static void endEdit(String docName, int numSec) {
         ByteBuffer a1 = ByteBuffer.wrap(docName.getBytes());
@@ -488,8 +505,8 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo per inviare un messaggio sulla chat del documento che si sta editando
+    * @param text il testo da inviare (verrà automaticamente corredato col mittente)
     */
     static void send(String text) {
         if (chatAddress == null) {
@@ -519,14 +536,11 @@ public class Client {
     }
 
     /**
-    *
-    *
-    */
-
-
-    /**
-    *
-    *
+    * Metodo utilizzato dai precedenti per scrivere una sezione nel file system
+    * @param docName nome del documento
+    * @param num numero della sezione
+    * @param data array di byte da scrivere
+    * @throws IOException se occorrono errori nella scrittura del FileChannel
     */
     static void saveSection(String docName, int num, byte[] data) throws IOException {
         Path path = Paths.get(loggedUser, docName);
@@ -545,8 +559,7 @@ public class Client {
 
 
     /**
-    *
-    *
+    * Metodo che stampa un messaggio di errore, indicando lanciare l'help
     */
     static void wrongCommand() {
         System.out.printf(
@@ -555,8 +568,7 @@ public class Client {
     }
 
     /**
-    *
-    *
+    * Metodo che stampa l'help
     */
     static void printHelpMessage() {
         System.out.printf(
@@ -577,11 +589,3 @@ public class Client {
         );
     }
 }
-
-//TODO
-// formattare output console
-
-// fare la prove su computer diversi immettendo come argomento del client l' IP del server
-
-// documentare e commentare
-// scrivere relazione

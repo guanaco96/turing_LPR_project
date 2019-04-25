@@ -1,5 +1,9 @@
 package server;
 
+import common.Config;
+import common.Message;
+import common.Operation;
+
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
@@ -7,8 +11,9 @@ import java.nio.file.*;
 import java.util.*;
 
 /**
- * -----------------DESCRIZIONE---------------
- * ACHTUNG! tutte le comparazioni tra users sono fatte by reference
+ * Classe che contiene tutti i campi che caratterizzano un documento e
+ * i metodi per salvarlo, leggerlo, scriverlo e gestire gli utenti che lo
+ * stanno editando.
  *
  * @author Lorenzo Beretta, Matricola: 536242
  */
@@ -31,6 +36,7 @@ public class Document {
      * @param documentName nome del documento
      * @param creatorUser User corrispondente al creatore
      * @param sectionsNumber numero di sezioni
+     * @param chat istanza di ChatHandler (unica per tutti i documenti) 
      */
     Document(String documentName, User creatorUser, int sectionsNumber, ChatHandler chat) {
         name = documentName;
@@ -56,9 +62,10 @@ public class Document {
     }
 
     /**
-     *
-     *
-     *
+     * Getter per l'indirizzo di chat associato al documento
+     * @param user utente che vuole accedere alla chat, per verificarne i permessi
+     * @return un ByteBuffer contenente la String della rappresentazione dotted quad
+     * @throws IOException se sollevata da chatHandler.generateAddress
      */
     synchronized ByteBuffer getChatAddress(User user) throws IOException {
         if (chatAddress == null) {
@@ -68,9 +75,8 @@ public class Document {
     }
 
     /**
-     *
-     *
-     *
+     * Metodo che crea nel file system i file corrispondenti alle sezioni documento
+     * @return l'esito della creazione codificato da una Operation
      */
     Operation createFile() {
         Path path = Paths.get(Config.basePath, creator.getUsername(), name);
@@ -239,9 +245,8 @@ public class Document {
     }
 
     /**
-     *
-     *
-     *
+     * Metodo che libera l'indirizzo di multicast della chat nel caso in cui
+     * il documento abbia tutte le sezioni libere.
      */
     void freeIfUseless() {
         int sec = 0;
@@ -252,6 +257,11 @@ public class Document {
         }
     }
 
+    /**
+     * Metodo per aggiornare i campi dell'oggetto User in caso
+     * di disconnessione (con comando o brutale)
+     * @param user l'utente che vuole effettuare il logout
+     */
     void logOut(User user) {
         for (int i = 0; i < numberOfSections; i++) {
             if (editingUser[i] == user) editingUser[i] = null;

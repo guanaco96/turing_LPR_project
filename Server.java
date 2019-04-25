@@ -1,10 +1,10 @@
 import server.User;
 import server.Document;
 import server.ChatHandler;
-import server.Config;
 import server.TaskExecutor;
 import server.RemoteTableImplementation;
-import remote.RemoteTableInterface;
+import common.Config;
+import common.RemoteTableInterface;
 
 import java.io.*;
 import java.nio.*;
@@ -18,7 +18,12 @@ import java.rmi.server.*;
 import java.rmi.registry.*;
 
 /**
- * -----------------DESCRIZIONE---------------
+ * Questa classe contiene il Main del server TURING.
+ * Nel main viene esportato lo stub per RMI, vengono aperti ed inizializzati il selettore, il socket
+ * di welcome per i client e i channel UDP per le notifiche. Viene infine creato un threadPool.
+ * Il main entra poi nel suo ciclo principale: registra tutti i socket di client già serviti ma che non si sono
+ * ancora disconnessi presenti su una coda, seleziona quelli pronti per operazioni di I/O e li fa servire dai threads
+ * del pool tramite dei Runnable (TaskExecutor).
  *
  * @author Lorenzo Beretta, Matricola: 536242
  */
@@ -35,8 +40,7 @@ public class Server {
     private static ChatHandler chatHandler;
 
     /**
-     *
-     *
+     * Main del server TURING
      */
     public static void main(String[] args) {
 
@@ -46,7 +50,7 @@ public class Server {
         socketMap = new ConcurrentHashMap<>();
         queue = new LinkedBlockingDeque<>();
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Config.threadsInPool);
-        chatHandler = new ChatHandler(Config.portChat);
+        chatHandler = new ChatHandler();
 
         // attivo il servizio di registrazione RMI
         RemoteTableImplementation remoteTable = new RemoteTableImplementation(userMap);

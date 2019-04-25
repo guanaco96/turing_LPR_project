@@ -1,11 +1,11 @@
-package remote;
+package common;
 
-import server.Operation;
+import common.Operation;
 
 import java.rmi.*;
 
 /**
- * -----------------DESCRIZIONE---------------
+ * Interfaccia comune a client e server per la gestione della RMI
  *
  * @author Lorenzo Beretta, Matricola: 536242
  */

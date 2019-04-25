@@ -1,4 +1,4 @@
-package server;
+package common;
 
 /**
  * Questa enum definisce i tipi di messaggio inviati tra Server e client.

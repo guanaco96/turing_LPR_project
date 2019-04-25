@@ -1,12 +1,18 @@
 package client;
 
-import server.Config;
+import common.Config;
 
 import java.io.*;
 import java.nio.*;
 import java.net.*;
 import java.util.*;
 
+/**
+ * Classe che implementa il main del thread del client che ascolta
+ * i messaggi scritti in multicast tra gli utenti che editano lo stesso docuemnto.
+ *
+ * @author Lorenzo Beretta, Matricola: 536242
+ */
 public class ChatListener implements Runnable {
 
     private final int dpSize = 8192;
@@ -14,8 +20,8 @@ public class ChatListener implements Runnable {
     private Vector<String> pendingMsgs;
 
     /**
-     *
-     *
+     * Costruttore
+     * @param inetAddress indirizzo IP multicast del gruppo chat
      */
     public ChatListener(InetAddress inetAddress) {
         ia = inetAddress;
@@ -23,8 +29,8 @@ public class ChatListener implements Runnable {
     }
 
     /**
-     *
-     *
+     * Metodo che stampa tutti i messaggi fino ad ora salvati
+     * in una coda la svota.
      */
     synchronized public void printMsgs() {
         System.out.println("\nMessaggi ricevuti:\n");
@@ -35,8 +41,9 @@ public class ChatListener implements Runnable {
     }
 
     /**
-     *
-     *
+     * Main del thread che rimane in ascolto: dopo aver inizializzato
+     * il MulticastSocket entra in un ciclo di lettura e salvataggio
+     * nella coda dei messaggi.
      */
     public void run() {
         MulticastSocket ms = null;
